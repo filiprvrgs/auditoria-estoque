@@ -166,7 +166,7 @@ export default function Dashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="card">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -217,7 +217,7 @@ export default function Dashboard() {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Quantity Comparison Chart */}
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -301,7 +301,7 @@ export default function Dashboard() {
       </div>
 
       {/* Detailed Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
@@ -349,7 +349,8 @@ export default function Dashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Auditorias Recentes
           </h3>
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -426,13 +427,66 @@ export default function Dashboard() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="lg:hidden space-y-4">
+            {audits.slice(-5).reverse().map((audit) => {
+              const totalExpected = audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0)
+              const totalActual = audit.items.reduce((sum, item) => sum + item.actualQuantity, 0)
+              const accuracy = totalExpected > 0 ? ((totalExpected - Math.abs(totalExpected - totalActual)) / totalExpected) * 100 : 0
+
+              return (
+                <div key={audit.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-900">{audit.location}</h4>
+                      <p className="text-sm text-gray-500">{audit.auditor}</p>
+                      <p className="text-xs text-gray-400">{new Date(audit.date).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => viewAuditDetails(audit)}
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                        title="Ver detalhes"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => confirmDeleteAudit(audit)}
+                        className="text-danger-600 hover:text-danger-900 p-1 rounded"
+                        title="Remover auditoria"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">Itens:</span>
+                      <span className="ml-1 font-medium">{audit.items.length}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Precisão:</span>
+                      <span className={`ml-1 font-medium ${
+                        accuracy >= 95 ? 'text-success-600' :
+                        accuracy >= 80 ? 'text-warning-600' :
+                        'text-danger-600'
+                      }`}>
+                        {accuracy.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
       {/* Detail Modal */}
       {showDetailModal && selectedAudit && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg p-4 sm:p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">
                 Detalhes da Auditoria - {selectedAudit.location}
@@ -446,7 +500,7 @@ export default function Dashboard() {
             </div>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b pb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b pb-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Data</p>
                   <p className="text-sm text-gray-900">{new Date(selectedAudit.date).toLocaleDateString('pt-BR')}</p>
@@ -464,7 +518,7 @@ export default function Dashboard() {
                              {selectedAudit.sectorInfo && (
                  <div className="border-b pb-4">
                    <h4 className="text-md font-semibold text-gray-900 mb-3">Informações do Setor</h4>
-                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
                      <div className="text-center">
                        <p className="text-lg font-bold text-primary-600">
                          {selectedAudit.sectorInfo.sectorName}
@@ -565,7 +619,7 @@ export default function Dashboard() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedAudit && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
                 <AlertTriangle className="h-8 w-8 text-danger-500" />

@@ -202,8 +202,8 @@ export default function DataEntry() {
            Use o botão "Salvar Apenas Informações do Setor" para salvar apenas estes dados, ou "Salvar Auditoria Completa" 
            para salvar tudo (itens + setor).
          </p>
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-           <div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+           <div className="sm:col-span-2 lg:col-span-1">
              <label className="block text-sm font-medium text-gray-700 mb-2">
                Nome do Setor/Rua
              </label>
@@ -277,7 +277,7 @@ export default function DataEntry() {
            </div>
          </div>
          
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
            <div>
              <label className="block text-sm font-medium text-gray-700 mb-2">
                Lotes Não Encontrados
@@ -388,7 +388,7 @@ export default function DataEntry() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Adicionar Item
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Código do Produto
@@ -437,7 +437,7 @@ export default function DataEntry() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Número do Lote
@@ -488,7 +488,7 @@ export default function DataEntry() {
           </div>
         </div>
 
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
            <div>
              <label className="block text-sm font-medium text-gray-700 mb-2">
                Quantidade de Lotes Não Encontrados
@@ -554,7 +554,8 @@ export default function DataEntry() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Itens da Auditoria ({auditData.items.length})
           </h3>
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -567,21 +568,21 @@ export default function DataEntry() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Real
                   </th>
-                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                     Lotes Não Encontrados
-                   </th>
-                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                     Caixas Não Cadastradas
-                   </th>
-                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                     Local Errado
-                   </th>
-                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                     Quantidade Diferente
-                   </th>
-                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                     Ações
-                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Lotes Não Encontrados
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Caixas Não Cadastradas
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Local Errado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Quantidade Diferente
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ações
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -600,43 +601,99 @@ export default function DataEntry() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {item.expectedQuantity}
                     </td>
-                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                       {item.actualQuantity}
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                       {item.notFoundBatches || 0}
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                       {item.unregisteredBoxes || 0}
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                       {item.wrongLocationBoxes || 0}
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                       {item.quantityMismatches || 0}
-                     </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                       <div className="flex space-x-2">
-                         <button
-                           onClick={() => removeItem(item.id)}
-                           className="text-danger-600 hover:text-danger-900 p-1 rounded"
-                           title="Remover item"
-                         >
-                           <Trash2 className="h-4 w-4" />
-                         </button>
-                         <button
-                           onClick={() => showItemErrors(item)}
-                           className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                           title="Ver erros"
-                         >
-                           <AlertTriangle className="h-4 w-4" />
-                         </button>
-                       </div>
-                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.actualQuantity}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.notFoundBatches || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.unregisteredBoxes || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.wrongLocationBoxes || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {item.quantityMismatches || 0}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => removeItem(item.id)}
+                          className="text-danger-600 hover:text-danger-900 p-1 rounded"
+                          title="Remover item"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => showItemErrors(item)}
+                          className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                          title="Ver erros"
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="lg:hidden space-y-4">
+            {auditData.items.map((item) => (
+              <div key={item.id} className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-gray-900">{item.productCode}</h4>
+                    <p className="text-sm text-gray-500">{item.productName}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="text-danger-600 hover:text-danger-900 p-1 rounded"
+                      title="Remover item"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => showItemErrors(item)}
+                      className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                      title="Ver erros"
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-500">Esperado:</span>
+                    <span className="ml-1 font-medium">{item.expectedQuantity}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Real:</span>
+                    <span className="ml-1 font-medium">{item.actualQuantity}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Lotes Não Encontrados:</span>
+                    <span className="ml-1 font-medium">{item.notFoundBatches || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Caixas Não Cadastradas:</span>
+                    <span className="ml-1 font-medium">{item.unregisteredBoxes || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Local Errado:</span>
+                    <span className="ml-1 font-medium">{item.wrongLocationBoxes || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Quantidade Diferente:</span>
+                    <span className="ml-1 font-medium">{item.quantityMismatches || 0}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -655,7 +712,7 @@ export default function DataEntry() {
      {/* Error Modal */}
      {showErrorModal && selectedItem && (
        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-         <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+         <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full mx-4">
            <div className="flex justify-between items-center mb-4">
              <h3 className="text-lg font-semibold text-gray-900">
                Resumo de Erros - {selectedItem.productName}
