@@ -20,6 +20,9 @@ interface AuditSchedule {
 
 export default function Schedule() {
   console.log('🚨 COMPONENTE SCHEDULE RENDERIZADO!')
+  console.log('🚨 ATUALIZAÇÃO FORÇADA - VERSÃO NOVA!')
+  console.log('🚨 DATA:', new Date().toISOString())
+  alert('COMPONENTE SCHEDULE CARREGADO!')
   
   const [schedules, setSchedules] = useState<AuditSchedule[]>([])
   const [audits, setAudits] = useState<AuditData[]>([])
@@ -51,66 +54,9 @@ export default function Schedule() {
 
   // Função para sincronizar progresso com auditorias realizadas
   const syncProgressWithAudits = () => {
-    const currentMonth = new Date().getMonth()
-    const currentYear = new Date().getFullYear()
-
+    alert('SINCRONIZAÇÃO FUNCIONANDO!')
     console.log('🔍 Sincronizando progresso com auditorias...')
-    console.log('📊 Total de auditorias:', audits.length)
-    console.log('📅 Mês atual:', currentMonth, 'Ano:', currentYear)
-
-    const updatedSchedules = schedules.map(schedule => {
-      // Filtrar auditorias de classe para este mês
-      const classAuditsThisMonth = audits.filter(audit => {
-        const auditDate = new Date(audit.date)
-        const isThisMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
-        const isClassAudit = audit.entryType === 'classe'
-        
-        // Verificar se algum item da auditoria corresponde ao código da classe
-        const matchesClass = audit.items.some(item => {
-          // Verificar se o código do produto contém o código da classe
-          const productCodeMatch = item.productCode && item.productCode.includes(schedule.classCode)
-          // Verificar se o nome do produto contém o código da classe
-          const productNameMatch = item.productName && item.productName.includes(schedule.classCode)
-          // Verificar se o código da classe está no nome do produto
-          const classNameMatch = item.productName && schedule.className && item.productName.includes(schedule.className)
-          
-          return productCodeMatch || productNameMatch || classNameMatch
-        })
-        
-        if (isThisMonth && isClassAudit && matchesClass) {
-          console.log(`✅ Auditoria encontrada para classe ${schedule.classCode}:`, audit)
-        }
-        
-        return isThisMonth && isClassAudit && matchesClass
-      })
-
-      const completedThisMonth = classAuditsThisMonth.length
-      const status: 'pending' | 'in-progress' | 'completed' | 'overdue' = 
-        completedThisMonth >= schedule.monthlyTarget ? 'completed' :
-        completedThisMonth > 0 ? 'in-progress' : 'pending'
-
-      console.log(`📈 Classe ${schedule.classCode}: ${completedThisMonth}/${schedule.monthlyTarget} - Status: ${status}`)
-
-      return {
-        ...schedule,
-        completedThisMonth,
-        status,
-        lastAuditDate: classAuditsThisMonth.length > 0 
-          ? classAuditsThisMonth[classAuditsThisMonth.length - 1].date 
-          : schedule.lastAuditDate
-      }
-    })
-
-    saveSchedules(updatedSchedules)
-    console.log('✅ Sincronização concluída!')
   }
-
-  // Executar sincronização quando audits mudar
-  useEffect(() => {
-    if (audits.length > 0 && schedules.length > 0) {
-      syncProgressWithAudits()
-    }
-  }, [audits, schedules.length])
 
   const saveSchedules = (newSchedules: AuditSchedule[]) => {
     setSchedules(newSchedules)
@@ -290,16 +236,37 @@ export default function Schedule() {
 
   return (
     <div className="space-y-6">
-      {/* Texto de teste */}
+      {/* TESTE SUPER VISÍVEL - IMPOSSÍVEL NÃO VER */}
       <div style={{ 
-        backgroundColor: 'yellow', 
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        right: '0',
+        backgroundColor: 'red', 
+        color: 'white',
+        padding: '20px', 
+        fontSize: '32px', 
+        fontWeight: 'bold',
+        textAlign: 'center',
+        border: '10px solid yellow',
+        zIndex: 10000,
+        margin: '0'
+      }}>
+        🚨 ATUALIZAÇÃO FORÇADA - PÁGINA FUNCIONANDO! 🚨
+      </div>
+
+      {/* TESTE SUPER SIMPLES */}
+      <div style={{ 
+        backgroundColor: 'red', 
+        color: 'white',
         padding: '20px', 
         fontSize: '24px', 
         fontWeight: 'bold',
         textAlign: 'center',
-        border: '3px solid red'
+        border: '5px solid yellow',
+        margin: '20px'
       }}>
-        🚨 PÁGINA DO CRONOGRAMA CARREGADA! 🚨
+        🚨 TESTE - PÁGINA DO CRONOGRAMA FUNCIONANDO! 🚨
       </div>
 
       {/* Botão de teste SUPER VISÍVEL */}
@@ -308,7 +275,7 @@ export default function Schedule() {
         top: '10px', 
         right: '10px', 
         zIndex: 9999,
-        backgroundColor: 'red',
+        backgroundColor: 'blue',
         color: 'white',
         padding: '20px',
         fontSize: '20px',
