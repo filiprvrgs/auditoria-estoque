@@ -52,16 +52,32 @@ export default function Schedule() {
     const currentMonth = new Date().getMonth()
     const currentYear = new Date().getFullYear()
 
+    console.log('🔍 Sincronizando progresso com auditorias...')
+    console.log('📊 Total de auditorias:', audits.length)
+    console.log('📅 Mês atual:', currentMonth, 'Ano:', currentYear)
+
     const updatedSchedules = schedules.map(schedule => {
       // Filtrar auditorias de classe para este mês
       const classAuditsThisMonth = audits.filter(audit => {
         const auditDate = new Date(audit.date)
         const isThisMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
         const isClassAudit = audit.entryType === 'classe'
-        const matchesClass = audit.items.some(item => 
-          item.productCode.includes(schedule.classCode) || 
-          item.productName.includes(schedule.className)
-        )
+        
+        // Verificar se algum item da auditoria corresponde ao código da classe
+        const matchesClass = audit.items.some(item => {
+          // Verificar se o código do produto contém o código da classe
+          const productCodeMatch = item.productCode && item.productCode.includes(schedule.classCode)
+          // Verificar se o nome do produto contém o código da classe
+          const productNameMatch = item.productName && item.productName.includes(schedule.classCode)
+          // Verificar se o código da classe está no nome do produto
+          const classNameMatch = item.productName && schedule.className && item.productName.includes(schedule.className)
+          
+          return productCodeMatch || productNameMatch || classNameMatch
+        })
+        
+        if (isThisMonth && isClassAudit && matchesClass) {
+          console.log(`✅ Auditoria encontrada para classe ${schedule.classCode}:`, audit)
+        }
         
         return isThisMonth && isClassAudit && matchesClass
       })
@@ -70,6 +86,8 @@ export default function Schedule() {
       const status: 'pending' | 'in-progress' | 'completed' | 'overdue' = 
         completedThisMonth >= schedule.monthlyTarget ? 'completed' :
         completedThisMonth > 0 ? 'in-progress' : 'pending'
+
+      console.log(`📈 Classe ${schedule.classCode}: ${completedThisMonth}/${schedule.monthlyTarget} - Status: ${status}`)
 
       return {
         ...schedule,
@@ -82,6 +100,7 @@ export default function Schedule() {
     })
 
     saveSchedules(updatedSchedules)
+    console.log('✅ Sincronização concluída!')
   }
 
   // Executar sincronização quando audits mudar
@@ -193,10 +212,19 @@ export default function Schedule() {
   const getRelatedAudits = (schedule: AuditSchedule) => {
     return audits.filter(audit => {
       const isClassAudit = audit.entryType === 'classe'
-      const matchesClass = audit.items.some(item => 
-        item.productCode.includes(schedule.classCode) || 
-        item.productName.includes(schedule.className)
-      )
+      
+      // Verificar se algum item da auditoria corresponde ao código da classe
+      const matchesClass = audit.items.some(item => {
+        // Verificar se o código do produto contém o código da classe
+        const productCodeMatch = item.productCode && item.productCode.includes(schedule.classCode)
+        // Verificar se o nome do produto contém o código da classe
+        const productNameMatch = item.productName && item.productName.includes(schedule.classCode)
+        // Verificar se o código da classe está no nome do produto
+        const classNameMatch = item.productName && schedule.className && item.productName.includes(schedule.className)
+        
+        return productCodeMatch || productNameMatch || classNameMatch
+      })
+      
       return isClassAudit && matchesClass
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   }
