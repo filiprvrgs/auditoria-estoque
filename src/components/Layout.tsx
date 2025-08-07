@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { ClipboardList, BarChart3, Package, Menu, X } from 'lucide-react'
+import { ClipboardList, BarChart3, Package, Menu, X, Calendar } from 'lucide-react'
 import { useState } from 'react'
 
 interface LayoutProps {
@@ -13,6 +13,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigation = [
     { name: 'Entrada de Dados', href: '/', icon: ClipboardList },
     { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+    { name: 'Cronograma', href: '/schedule', icon: Calendar },
   ]
 
   return (
