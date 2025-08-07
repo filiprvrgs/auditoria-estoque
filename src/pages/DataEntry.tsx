@@ -310,111 +310,58 @@ export default function DataEntry() {
           </div>
         </div>
         
-        {/* Batch-related fields - only show if usesBatches is true */}
+        {/* Batch-related error fields - only show if usesBatches is true */}
         {auditData.usesBatches && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Número do Lote
-                </label>
-                <input
-                  type="text"
-                  value={newItem.batchNumber}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, batchNumber: e.target.value }))}
-                  placeholder="Lote"
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Número da Caixa
-                </label>
-                <input
-                  type="text"
-                  value={newItem.boxNumber}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, boxNumber: e.target.value }))}
-                  placeholder="Caixa"
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Local Correto
-                </label>
-                <input
-                  type="text"
-                  value={newItem.correctLocation}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, correctLocation: e.target.value }))}
-                  placeholder="Local correto"
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Local Atual
-                </label>
-                <input
-                  type="text"
-                  value={newItem.actualLocation}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, actualLocation: e.target.value }))}
-                  placeholder="Local atual"
-                  className="input-field"
-                />
-              </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantidade de Lotes Não Encontrados
+              </label>
+              <input
+                type="number"
+                value={newItem.notFoundBatches || 0}
+                onChange={(e) => setNewItem(prev => ({ ...prev, notFoundBatches: parseInt(e.target.value) || 0 }))}
+                placeholder="0"
+                className="input-field"
+              />
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantidade de Lotes Não Encontrados
-                </label>
-                <input
-                  type="number"
-                  value={newItem.notFoundBatches || 0}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, notFoundBatches: parseInt(e.target.value) || 0 }))}
-                  placeholder="0"
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantidade de Caixas Não Cadastradas
-                </label>
-                <input
-                  type="number"
-                  value={newItem.unregisteredBoxes || 0}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, unregisteredBoxes: parseInt(e.target.value) || 0 }))}
-                  placeholder="0"
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantidade de Caixas em Local Errado
-                </label>
-                <input
-                  type="number"
-                  value={newItem.wrongLocationBoxes || 0}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, wrongLocationBoxes: parseInt(e.target.value) || 0 }))}
-                  placeholder="0"
-                  className="input-field"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantidade de Itens com Quantidade Diferente
-                </label>
-                <input
-                  type="number"
-                  value={newItem.quantityMismatches || 0}
-                  onChange={(e) => setNewItem(prev => ({ ...prev, quantityMismatches: parseInt(e.target.value) || 0 }))}
-                  placeholder="0"
-                  className="input-field"
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantidade de Caixas Não Cadastradas
+              </label>
+              <input
+                type="number"
+                value={newItem.unregisteredBoxes || 0}
+                onChange={(e) => setNewItem(prev => ({ ...prev, unregisteredBoxes: parseInt(e.target.value) || 0 }))}
+                placeholder="0"
+                className="input-field"
+              />
             </div>
-          </>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantidade de Caixas em Local Errado
+              </label>
+              <input
+                type="number"
+                value={newItem.wrongLocationBoxes || 0}
+                onChange={(e) => setNewItem(prev => ({ ...prev, wrongLocationBoxes: parseInt(e.target.value) || 0 }))}
+                placeholder="0"
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantidade de Itens com Quantidade Diferente
+              </label>
+              <input
+                type="number"
+                value={newItem.quantityMismatches || 0}
+                onChange={(e) => setNewItem(prev => ({ ...prev, quantityMismatches: parseInt(e.target.value) || 0 }))}
+                placeholder="0"
+                className="input-field"
+              />
+            </div>
+          </div>
         )}
 
         <button
@@ -620,13 +567,6 @@ export default function DataEntry() {
                 <p className="text-sm font-medium text-gray-700 mb-2">Informações do Item:</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div><span className="font-medium">Código:</span> {selectedItem.productCode}</div>
-                  {auditData.usesBatches && (
-                    <>
-                      <div><span className="font-medium">Lote:</span> {selectedItem.batchNumber}</div>
-                      <div><span className="font-medium">Caixa:</span> {selectedItem.boxNumber}</div>
-                      <div><span className="font-medium">Local Correto:</span> {selectedItem.correctLocation}</div>
-                    </>
-                  )}
                 </div>
               </div>
 
@@ -647,21 +587,6 @@ export default function DataEntry() {
                     <div><span className="font-medium">📦 Caixas Não Cadastradas:</span> {selectedItem.unregisteredBoxes || 0}</div>
                     <div><span className="font-medium">⚠️ Local Errado:</span> {selectedItem.wrongLocationBoxes || 0}</div>
                     <div><span className="font-medium">🔢 Quantidade Diferente:</span> {selectedItem.quantityMismatches || 0}</div>
-                  </div>
-                </div>
-              )}
-
-              {auditData.usesBatches && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Localização:</p>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><span className="font-medium">Correto:</span> {selectedItem.correctLocation}</div>
-                    <div><span className="font-medium">Atual:</span> {selectedItem.actualLocation}</div>
-                    {selectedItem.correctLocation !== selectedItem.actualLocation && (
-                      <div className="col-span-2 text-red-600 font-medium">
-                        ⚠️ Item em local incorreto!
-                      </div>
-                    )}
                   </div>
                 </div>
               )}

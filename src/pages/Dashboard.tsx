@@ -642,14 +642,6 @@ export default function Dashboard() {
                           <p className="text-sm font-medium text-gray-900">{item.productName || item.productCode}</p>
                           <p className="text-xs text-gray-500">Esperado: {item.expectedQuantity} | Real: {item.actualQuantity}</p>
                         </div>
-                        <div className="text-right text-xs">
-                          {selectedAudit.usesBatches && (
-                            <>
-                              <p className="text-gray-500">Lote: {item.batchNumber}</p>
-                              <p className="text-gray-500">Caixa: {item.boxNumber}</p>
-                            </>
-                          )}
-                        </div>
                       </div>
                     </div>
                   ))}
