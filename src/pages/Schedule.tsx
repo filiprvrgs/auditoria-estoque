@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Plus, Edit, Trash2, Save, X, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
 
 interface AuditSchedule {
   id: string
@@ -22,8 +22,8 @@ export default function Schedule() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<AuditSchedule | null>(null)
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+  const [currentMonth] = useState(new Date().getMonth())
+  const [currentYear] = useState(new Date().getFullYear())
 
   // Estados para o formulário
   const [formData, setFormData] = useState({
@@ -108,24 +108,6 @@ export default function Schedule() {
       notes: schedule.notes || ''
     })
     setShowEditModal(true)
-  }
-
-  const updateProgress = (id: string, completed: number) => {
-    const updatedSchedules = schedules.map(schedule => {
-      if (schedule.id === id) {
-        const newCompleted = Math.max(0, Math.min(completed, schedule.monthlyTarget))
-        const status = newCompleted >= schedule.monthlyTarget ? 'completed' : 
-                     newCompleted > 0 ? 'in-progress' : 'pending'
-        
-        return {
-          ...schedule,
-          completedThisMonth: newCompleted,
-          status
-        }
-      }
-      return schedule
-    })
-    saveSchedules(updatedSchedules)
   }
 
   const getStatusColor = (status: string) => {
