@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Calendar, CheckCircle, RefreshCw } from 'lucide-react'
 
 export default function Schedule() {
-  const [schedules, setSchedules] = useState<AuditSchedule[]>(() => {
+  const [schedules, setSchedules] = useState<any[]>(() => {
     const saved = localStorage.getItem('auditSchedules')
     return saved ? JSON.parse(saved) : []
   })
 
-  const [audits, setAudits] = useState<AuditData[]>(() => {
+  const [audits] = useState<any[]>(() => {
     const saved = localStorage.getItem('audits')
     return saved ? JSON.parse(saved) : []
   })
 
   const [showModal, setShowModal] = useState(false)
-  const [editingSchedule, setEditingSchedule] = useState<AuditSchedule | null>(null)
+  const [editingSchedule, setEditingSchedule] = useState<any | null>(null)
   const [showAuditsModal, setShowAuditsModal] = useState(false)
-  const [selectedSchedule, setSelectedSchedule] = useState<AuditSchedule | null>(null)
+  const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null)
 
   const currentMonth = new Date().getMonth()
   const currentYear = new Date().getFullYear()
@@ -28,7 +28,7 @@ export default function Schedule() {
         const auditDate = new Date(audit.auditDate)
         const isCurrentMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
         
-        const matchesClass = audit.items.some(item => {
+        const matchesClass = audit.items.some((item: any) => {
           const productCodeMatch = item.productCode && item.productCode.includes(schedule.classCode)
           const productNameMatch = item.productName && item.productName.includes(schedule.classCode)
           const classNameMatch = item.productName && schedule.className && item.productName.includes(schedule.className)
@@ -66,7 +66,7 @@ export default function Schedule() {
   }, [audits, schedules.length])
 
   const addSchedule = () => {
-    const newSchedule: AuditSchedule = {
+    const newSchedule = {
       id: Date.now().toString(),
       className: '',
       classCode: '',
@@ -82,7 +82,7 @@ export default function Schedule() {
     setShowModal(true)
   }
 
-  const editSchedule = (schedule: AuditSchedule) => {
+  const editSchedule = (schedule: any) => {
     setEditingSchedule(schedule)
     setShowModal(true)
   }
@@ -112,12 +112,12 @@ export default function Schedule() {
     setSchedules(schedules.map(s => s.id === id ? { ...s, completedThisMonth } : s))
   }
 
-  const getRelatedAudits = (schedule: AuditSchedule) => {
+  const getRelatedAudits = (schedule: any) => {
     return audits.filter(audit => {
       const auditDate = new Date(audit.auditDate)
       const isCurrentMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
       
-      const matchesClass = audit.items.some(item => {
+      const matchesClass = audit.items.some((item: any) => {
         const productCodeMatch = item.productCode && item.productCode.includes(schedule.classCode)
         const productNameMatch = item.productName && item.productName.includes(schedule.classCode)
         const classNameMatch = item.productName && schedule.className && item.productName.includes(schedule.className)
@@ -128,7 +128,7 @@ export default function Schedule() {
     })
   }
 
-  const viewRelatedAudits = (schedule: AuditSchedule) => {
+  const viewRelatedAudits = (schedule: any) => {
     setSelectedSchedule(schedule)
     setShowAuditsModal(true)
   }
@@ -142,14 +142,7 @@ export default function Schedule() {
     }
   }
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Concluído'
-      case 'in-progress': return 'Em Andamento'
-      case 'overdue': return 'Atrasado'
-      default: return 'Pendente'
-    }
-  }
+
 
   const totalSchedules = schedules.length
   const completedSchedules = schedules.filter(s => s.status === 'completed').length
