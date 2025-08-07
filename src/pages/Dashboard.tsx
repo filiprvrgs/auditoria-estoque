@@ -86,7 +86,7 @@ export default function Dashboard() {
       { name: '❌ Lotes Não Encontrados', value: notFoundBatches, color: '#ef4444' },
       { name: '📦 Caixas Não Cadastradas', value: unregisteredBoxes, color: '#6b7280' },
       { name: '⚠️ Local Errado', value: wrongLocationBoxes, color: '#f59e0b' },
-      { name: '🔢 Quantidade Diferente', value: quantityMismatches, color: '#3b82f6' }
+      { name: '🔢 Quantidade de Lotes Baixados', value: quantityMismatches, color: '#3b82f6' }
     ].filter(item => item.value > 0)
   }
 
@@ -109,7 +109,7 @@ export default function Dashboard() {
         'Lotes Não Encontrados': audit.items.reduce((sum, item) => sum + (item.notFoundBatches || 0), 0),
         'Caixas Não Cadastradas': audit.items.reduce((sum, item) => sum + (item.unregisteredBoxes || 0), 0),
         'Local Errado': audit.items.reduce((sum, item) => sum + (item.wrongLocationBoxes || 0), 0),
-        'Quantidade Diferente': audit.items.reduce((sum, item) => sum + (item.quantityMismatches || 0), 0)
+        'Quantidade de Lotes Baixados': audit.items.reduce((sum, item) => sum + (item.quantityMismatches || 0), 0)
       }
 
       return {
@@ -314,7 +314,7 @@ export default function Dashboard() {
               <Line type="monotone" dataKey="Lotes Não Encontrados" stroke="#ef4444" strokeWidth={2} />
               <Line type="monotone" dataKey="Caixas Não Cadastradas" stroke="#6b7280" strokeWidth={2} />
               <Line type="monotone" dataKey="Local Errado" stroke="#f59e0b" strokeWidth={2} />
-              <Line type="monotone" dataKey="Quantidade Diferente" stroke="#3b82f6" strokeWidth={2} />
+              <Line type="monotone" dataKey="Quantidade de Lotes Baixados" stroke="#3b82f6" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -391,7 +391,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500">🔢 Quantidade Diferente</p>
+              <p className="text-sm font-medium text-gray-500">🔢 Quantidade de Lotes Baixados</p>
               <p className="text-3xl font-bold text-blue-600">{summary.quantityMismatches}</p>
             </div>
             <AlertTriangle className="h-12 w-12 text-blue-500" />
@@ -627,7 +627,7 @@ export default function Dashboard() {
                     <p className="text-2xl font-bold text-blue-600">
                       {selectedAudit.items.reduce((sum, item) => sum + (item.quantityMismatches || 0), 0)}
                     </p>
-                    <p className="text-xs text-gray-500">🔢 Quantidade Diferente</p>
+                    <p className="text-xs text-gray-500">🔢 Quantidade de Lotes Baixados</p>
                   </div>
                 </div>
               </div>

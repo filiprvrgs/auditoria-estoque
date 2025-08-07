@@ -351,7 +351,7 @@ export default function DataEntry() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantidade de Itens com Quantidade Diferente
+                Quantidade de Itens com Quantidade de Lotes Baixados
               </label>
               <input
                 type="number"
@@ -405,7 +405,7 @@ export default function DataEntry() {
                         Local Errado
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Quantidade Diferente
+                        Quantidade de Lotes Baixados
                       </th>
                     </>
                   )}
@@ -523,7 +523,7 @@ export default function DataEntry() {
                         <span className="ml-1 font-medium">{item.wrongLocationBoxes || 0}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">Quantidade Diferente:</span>
+                        <span className="text-gray-500">Quantidade de Lotes Baixados:</span>
                         <span className="ml-1 font-medium">{item.quantityMismatches || 0}</span>
                       </div>
                     </>
@@ -586,7 +586,7 @@ export default function DataEntry() {
                     <div><span className="font-medium">❌ Lotes Não Encontrados:</span> {selectedItem.notFoundBatches || 0}</div>
                     <div><span className="font-medium">📦 Caixas Não Cadastradas:</span> {selectedItem.unregisteredBoxes || 0}</div>
                     <div><span className="font-medium">⚠️ Local Errado:</span> {selectedItem.wrongLocationBoxes || 0}</div>
-                    <div><span className="font-medium">🔢 Quantidade Diferente:</span> {selectedItem.quantityMismatches || 0}</div>
+                    <div><span className="font-medium">🔢 Quantidade de Lotes Baixados:</span> {selectedItem.quantityMismatches || 0}</div>
                   </div>
                 </div>
               )}
