@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Calendar, CheckCircle, RefreshCw } from 'lucide-react'
 
+// TESTE: Forçar deploy com dropdowns funcionais
 export default function Schedule() {
   const [schedules, setSchedules] = useState<any[]>(() => {
     const saved = localStorage.getItem('auditSchedules')
@@ -19,6 +20,31 @@ export default function Schedule() {
 
   const currentMonth = new Date().getMonth()
   const currentYear = new Date().getFullYear()
+
+  // Categorias predefinidas
+  const categories = [
+    'Eletrônicos',
+    'Móveis',
+    'Roupas',
+    'Alimentos',
+    'Livros',
+    'Ferramentas',
+    'Automotivo',
+    'Casa e Jardim',
+    'Esportes',
+    'Outros'
+  ]
+
+  // Armazéns predefinidos
+  const warehouses = [
+    'Armazém Central',
+    'Armazém Norte',
+    'Armazém Sul',
+    'Armazém Leste',
+    'Armazém Oeste',
+    'Depósito Principal',
+    'Depósito Secundário'
+  ]
 
   // Sincronizar progresso com auditorias realizadas
   const syncProgressWithAudits = () => {
@@ -141,8 +167,6 @@ export default function Schedule() {
       default: return 'bg-gray-100 text-gray-800'
     }
   }
-
-
 
   const totalSchedules = schedules.length
   const completedSchedules = schedules.filter(s => s.status === 'completed').length
@@ -337,6 +361,7 @@ export default function Schedule() {
                       value={editingSchedule.className}
                       onChange={(e) => setEditingSchedule({...editingSchedule, className: e.target.value})}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Ex: Eletrônicos Básicos"
                     />
                   </div>
                   
@@ -347,6 +372,7 @@ export default function Schedule() {
                       value={editingSchedule.classCode}
                       onChange={(e) => setEditingSchedule({...editingSchedule, classCode: e.target.value})}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Ex: ELET001"
                     />
                   </div>
                   
@@ -357,27 +383,36 @@ export default function Schedule() {
                       value={editingSchedule.description}
                       onChange={(e) => setEditingSchedule({...editingSchedule, description: e.target.value})}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Descrição detalhada da classe"
                     />
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Categoria</label>
-                    <input
-                      type="text"
+                    <select
                       value={editingSchedule.category}
                       onChange={(e) => setEditingSchedule({...editingSchedule, category: e.target.value})}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    >
+                      <option value="">Selecione uma categoria</option>
+                      {categories.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Armazém</label>
-                    <input
-                      type="text"
+                    <select
                       value={editingSchedule.warehouse}
                       onChange={(e) => setEditingSchedule({...editingSchedule, warehouse: e.target.value})}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    />
+                    >
+                      <option value="">Selecione um armazém</option>
+                      {warehouses.map((warehouse) => (
+                        <option key={warehouse} value={warehouse}>{warehouse}</option>
+                      ))}
+                    </select>
                   </div>
                   
                   <div>
@@ -388,6 +423,7 @@ export default function Schedule() {
                       onChange={(e) => setEditingSchedule({...editingSchedule, frequencyPerYear: parseInt(e.target.value) || 0})}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       min="1"
+                      max="52"
                     />
                   </div>
                 </div>
