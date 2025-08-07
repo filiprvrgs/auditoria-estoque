@@ -302,11 +302,22 @@ export default function Schedule() {
           <div className="flex space-x-3">
             <button
               onClick={syncProgressWithAudits}
-              className="btn-secondary flex items-center space-x-2"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
               title="Sincronizar com auditorias realizadas"
             >
               <RefreshCw className="h-4 w-4" />
               <span>Sincronizar</span>
+            </button>
+            <button
+              onClick={() => {
+                console.log('🔍 Debug: Verificando dados...')
+                console.log('📊 Auditorias:', audits)
+                console.log('📅 Cronogramas:', schedules)
+              }}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+              title="Debug - Ver dados no console"
+            >
+              <span>Debug</span>
             </button>
             <button
               onClick={() => setShowAddModal(true)}
