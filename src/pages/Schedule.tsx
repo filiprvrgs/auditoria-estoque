@@ -1,5 +1,3 @@
-import React from 'react'
-
 export default function Schedule() {
   console.log('🚨 COMPONENTE SCHEDULE RENDERIZADO!')
   console.log('🚨 ATUALIZAÇÃO FORÇADA - VERSÃO NOVA!')
