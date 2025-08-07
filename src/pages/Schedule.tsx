@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Save, X, CheckCircle, Clock, AlertTriangle } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X, CheckCircle, Clock, AlertTriangle, RefreshCw } from 'lucide-react'
+import { AuditData } from '../types'
 
 interface AuditSchedule {
   id: string
@@ -19,8 +20,10 @@ interface AuditSchedule {
 
 export default function Schedule() {
   const [schedules, setSchedules] = useState<AuditSchedule[]>([])
+  const [audits, setAudits] = useState<AuditData[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showAuditsModal, setShowAuditsModal] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<AuditSchedule | null>(null)
   const [currentMonth] = useState(new Date().getMonth())
   const [currentYear] = useState(new Date().getFullYear())
@@ -39,8 +42,54 @@ export default function Schedule() {
 
   useEffect(() => {
     const savedSchedules = JSON.parse(localStorage.getItem('auditSchedules') || '[]')
+    const savedAudits = JSON.parse(localStorage.getItem('audits') || '[]')
     setSchedules(savedSchedules)
+    setAudits(savedAudits)
   }, [])
+
+  // Função para sincronizar progresso com auditorias realizadas
+  const syncProgressWithAudits = () => {
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
+
+    const updatedSchedules = schedules.map(schedule => {
+      // Filtrar auditorias de classe para este mês
+      const classAuditsThisMonth = audits.filter(audit => {
+        const auditDate = new Date(audit.date)
+        const isThisMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
+        const isClassAudit = audit.entryType === 'classe'
+        const matchesClass = audit.items.some(item => 
+          item.productCode.includes(schedule.classCode) || 
+          item.productName.includes(schedule.className)
+        )
+        
+        return isThisMonth && isClassAudit && matchesClass
+      })
+
+      const completedThisMonth = classAuditsThisMonth.length
+      const status: 'pending' | 'in-progress' | 'completed' | 'overdue' = 
+        completedThisMonth >= schedule.monthlyTarget ? 'completed' :
+        completedThisMonth > 0 ? 'in-progress' : 'pending'
+
+      return {
+        ...schedule,
+        completedThisMonth,
+        status,
+        lastAuditDate: classAuditsThisMonth.length > 0 
+          ? classAuditsThisMonth[classAuditsThisMonth.length - 1].date 
+          : schedule.lastAuditDate
+      }
+    })
+
+    saveSchedules(updatedSchedules)
+  }
+
+  // Executar sincronização quando audits mudar
+  useEffect(() => {
+    if (audits.length > 0 && schedules.length > 0) {
+      syncProgressWithAudits()
+    }
+  }, [audits, schedules.length])
 
   const saveSchedules = (newSchedules: AuditSchedule[]) => {
     setSchedules(newSchedules)
@@ -108,6 +157,48 @@ export default function Schedule() {
       notes: schedule.notes || ''
     })
     setShowEditModal(true)
+  }
+
+  const updateStatus = (id: string, newStatus: 'pending' | 'in-progress' | 'completed' | 'overdue') => {
+    const updatedSchedules = schedules.map(schedule => {
+      if (schedule.id === id) {
+        return {
+          ...schedule,
+          status: newStatus
+        }
+      }
+      return schedule
+    })
+    saveSchedules(updatedSchedules)
+  }
+
+  const updateProgress = (id: string, completed: number) => {
+    const updatedSchedules = schedules.map(schedule => {
+      if (schedule.id === id) {
+        const newCompleted = Math.max(0, Math.min(completed, schedule.monthlyTarget))
+        const status: 'pending' | 'in-progress' | 'completed' | 'overdue' = newCompleted >= schedule.monthlyTarget ? 'completed' : 
+                     newCompleted > 0 ? 'in-progress' : 'pending'
+        
+        return {
+          ...schedule,
+          completedThisMonth: newCompleted,
+          status
+        }
+      }
+      return schedule
+    })
+    saveSchedules(updatedSchedules)
+  }
+
+  const getRelatedAudits = (schedule: AuditSchedule) => {
+    return audits.filter(audit => {
+      const isClassAudit = audit.entryType === 'classe'
+      const matchesClass = audit.items.some(item => 
+        item.productCode.includes(schedule.classCode) || 
+        item.productName.includes(schedule.className)
+      )
+      return isClassAudit && matchesClass
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   }
 
   const getStatusColor = (status: string) => {
@@ -180,13 +271,23 @@ export default function Schedule() {
               Gerencie o cronograma de auditorias por classe e categoria
             </p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Adicionar Classe</span>
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={syncProgressWithAudits}
+              className="btn-secondary flex items-center space-x-2"
+              title="Sincronizar com auditorias realizadas"
+            >
+              <RefreshCw className="h-4 w-4" />
+              <span>Sincronizar</span>
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Adicionar Classe</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -290,6 +391,9 @@ export default function Schedule() {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Última Auditoria
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Ações
                 </th>
               </tr>
@@ -328,23 +432,46 @@ export default function Schedule() {
                           style={{ width: `${schedule.monthlyTarget > 0 ? (schedule.completedThisMonth / schedule.monthlyTarget) * 100 : 0}%` }}
                         ></div>
                       </div>
+                      <input
+                        type="number"
+                        value={schedule.completedThisMonth}
+                        onChange={(e) => updateProgress(schedule.id, parseInt(e.target.value) || 0)}
+                        className="w-12 text-xs text-center border border-gray-300 rounded px-1 py-1"
+                        min="0"
+                        max={schedule.monthlyTarget}
+                      />
                       <span className="text-xs text-gray-500">
-                        {schedule.completedThisMonth}/{schedule.monthlyTarget}
+                        /{schedule.monthlyTarget}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(schedule.status)}`}>
-                      {getStatusIcon(schedule.status)}
-                      <span className="ml-1">
-                        {schedule.status === 'completed' ? 'Concluída' :
-                         schedule.status === 'in-progress' ? 'Em Progresso' :
-                         schedule.status === 'overdue' ? 'Atrasada' : 'Pendente'}
-                      </span>
-                    </span>
+                    <select
+                      value={schedule.status}
+                      onChange={(e) => updateStatus(schedule.id, e.target.value as 'pending' | 'in-progress' | 'completed' | 'overdue')}
+                      className={`text-xs font-semibold rounded-full px-2 py-1 border-0 ${getStatusColor(schedule.status)}`}
+                    >
+                      <option value="pending">Pendente</option>
+                      <option value="in-progress">Em Progresso</option>
+                      <option value="completed">Concluída</option>
+                      <option value="overdue">Atrasada</option>
+                    </select>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {schedule.lastAuditDate ? new Date(schedule.lastAuditDate).toLocaleDateString('pt-BR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setSelectedSchedule(schedule)
+                          setShowAuditsModal(true)
+                        }}
+                        className="text-green-600 hover:text-green-900"
+                        title="Ver auditorias relacionadas"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                      </button>
                       <button
                         onClick={() => editSchedule(schedule)}
                         className="text-blue-600 hover:text-blue-900"
@@ -411,17 +538,30 @@ export default function Schedule() {
                 </div>
                 <div>
                   <span className="text-gray-500">Progresso:</span>
-                  <span className="ml-1 font-medium">{schedule.completedThisMonth}/{schedule.monthlyTarget}</span>
+                  <div className="flex items-center space-x-1">
+                    <input
+                      type="number"
+                      value={schedule.completedThisMonth}
+                      onChange={(e) => updateProgress(schedule.id, parseInt(e.target.value) || 0)}
+                      className="w-8 text-xs text-center border border-gray-300 rounded px-1 py-1"
+                      min="0"
+                      max={schedule.monthlyTarget}
+                    />
+                    <span className="text-xs text-gray-500">/{schedule.monthlyTarget}</span>
+                  </div>
                 </div>
                 <div>
-                  <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(schedule.status)}`}>
-                    {getStatusIcon(schedule.status)}
-                    <span className="ml-1">
-                      {schedule.status === 'completed' ? 'Concluída' :
-                       schedule.status === 'in-progress' ? 'Em Progresso' :
-                       schedule.status === 'overdue' ? 'Atrasada' : 'Pendente'}
-                    </span>
-                  </span>
+                  <span className="text-gray-500">Status:</span>
+                  <select
+                    value={schedule.status}
+                    onChange={(e) => updateStatus(schedule.id, e.target.value as 'pending' | 'in-progress' | 'completed' | 'overdue')}
+                    className="text-xs border border-gray-300 rounded px-1 py-1"
+                  >
+                    <option value="pending">Pendente</option>
+                    <option value="in-progress">Em Progresso</option>
+                    <option value="completed">Concluída</option>
+                    <option value="overdue">Atrasada</option>
+                  </select>
                 </div>
               </div>
               
@@ -596,6 +736,106 @@ export default function Schedule() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Audits Modal */}
+      {showAuditsModal && selectedSchedule && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Auditorias Relacionadas - {selectedSchedule.className} ({selectedSchedule.classCode})
+              </h3>
+              <button
+                onClick={() => setShowAuditsModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <p className="text-2xl font-bold text-blue-600">{getRelatedAudits(selectedSchedule).length}</p>
+                  <p className="text-sm text-gray-500">Total de Auditorias</p>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <p className="text-2xl font-bold text-green-600">{selectedSchedule.completedThisMonth}</p>
+                  <p className="text-sm text-gray-500">Este Mês</p>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <p className="text-2xl font-bold text-purple-600">{selectedSchedule.monthlyTarget}</p>
+                  <p className="text-sm text-gray-500">Meta Mensal</p>
+                </div>
+              </div>
+
+              {getRelatedAudits(selectedSchedule).length > 0 ? (
+                <div className="space-y-3">
+                  {getRelatedAudits(selectedSchedule).map((audit) => (
+                    <div key={audit.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            {new Date(audit.date).toLocaleDateString('pt-BR')} - {audit.auditor}
+                          </h4>
+                          <p className="text-sm text-gray-500">{audit.location}</p>
+                        </div>
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          audit.entryType === 'classe' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {audit.entryType === 'classe' ? 'Classe' : audit.entryType}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">Itens:</span>
+                          <span className="ml-1 font-medium">{audit.items.length}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Esperado:</span>
+                          <span className="ml-1 font-medium">
+                            {audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Real:</span>
+                          <span className="ml-1 font-medium">
+                            {audit.items.reduce((sum, item) => sum + item.actualQuantity, 0)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Diferença:</span>
+                          <span className="ml-1 font-medium">
+                            {Math.abs(audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0) - 
+                                     audit.items.reduce((sum, item) => sum + item.actualQuantity, 0))}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <CheckCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">Nenhuma auditoria encontrada para esta classe</p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    As auditorias aparecerão aqui quando forem registradas no sistema
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowAuditsModal(false)}
+                className="btn-secondary"
+              >
+                Fechar
+              </button>
+            </div>
           </div>
         </div>
       )}
