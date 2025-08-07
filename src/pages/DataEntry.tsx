@@ -351,7 +351,7 @@ export default function DataEntry() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Quantidade de Itens com Quantidade de Lotes Baixados
+                Quantidade de Lotes Baixados
               </label>
               <input
                 type="number"
