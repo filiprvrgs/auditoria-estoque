@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts'
 import { TrendingUp, AlertTriangle, Package, MapPin, CheckCircle, XCircle, Trash2, Eye, X } from 'lucide-react'
-import { AuditData, AuditSummary } from '../types'
-
-
+import { AuditData, AuditSummary, SectorErrorData } from '../types'
 
 export default function Dashboard() {
   const [audits, setAudits] = useState<AuditData[]>([])
@@ -40,6 +38,7 @@ export default function Dashboard() {
     let quantityMismatches = 0
 
     auditData.forEach(audit => {
+      // Process items
       audit.items.forEach(item => {
         totalItems++
         auditedQuantity += item.expectedQuantity
@@ -50,6 +49,19 @@ export default function Dashboard() {
         wrongLocationBoxes += item.wrongLocationBoxes || 0
         quantityMismatches += item.quantityMismatches || 0
       })
+
+      // Process sector info if available
+      if (audit.sectorInfo) {
+        auditedQuantity += audit.sectorInfo.expectedComponents
+        realQuantity += audit.sectorInfo.foundComponents
+
+        if (audit.usesBatches) {
+          notFoundBatches += audit.sectorInfo.notFoundBatches
+          unregisteredBoxes += audit.sectorInfo.unregisteredBoxes
+          wrongLocationBoxes += audit.sectorInfo.wrongLocationBoxes
+        }
+        quantityMismatches += audit.sectorInfo.quantityMismatches
+      }
     })
 
     const errorMargin = Math.abs(auditedQuantity - realQuantity)
@@ -81,6 +93,16 @@ export default function Dashboard() {
         wrongLocationBoxes += item.wrongLocationBoxes || 0
         quantityMismatches += item.quantityMismatches || 0
       })
+
+      // Include sector info
+      if (audit.sectorInfo && audit.usesBatches) {
+        notFoundBatches += audit.sectorInfo.notFoundBatches
+        unregisteredBoxes += audit.sectorInfo.unregisteredBoxes
+        wrongLocationBoxes += audit.sectorInfo.wrongLocationBoxes
+      }
+      if (audit.sectorInfo) {
+        quantityMismatches += audit.sectorInfo.quantityMismatches
+      }
     })
 
     return [
@@ -92,44 +114,105 @@ export default function Dashboard() {
   }
 
   const getQuantityComparisonData = () => {
-    return audits.map(audit => ({
-      name: audit.location || 'Local',
-      esperado: audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0),
-      real: audit.items.reduce((sum, item) => sum + item.actualQuantity, 0)
-    }))
+    return audits.map(audit => {
+      const itemExpected = audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0)
+      const itemActual = audit.items.reduce((sum, item) => sum + item.actualQuantity, 0)
+      const sectorExpected = audit.sectorInfo?.expectedComponents || 0
+      const sectorActual = audit.sectorInfo?.foundComponents || 0
+      
+      return {
+        name: audit.location || 'Local',
+        esperado: itemExpected + sectorExpected,
+        real: itemActual + sectorActual
+      }
+    })
   }
 
   const getErrorTrendData = () => {
-    return audits.map(audit => ({
-      name: audit.date,
-      'Lotes Não Encontrados': audit.items.reduce((sum, item) => sum + (item.notFoundBatches || 0), 0),
-      'Caixas Não Cadastradas': audit.items.reduce((sum, item) => sum + (item.unregisteredBoxes || 0), 0),
-      'Local Errado': audit.items.reduce((sum, item) => sum + (item.wrongLocationBoxes || 0), 0),
-      'Quantidade Diferente': audit.items.reduce((sum, item) => sum + (item.quantityMismatches || 0), 0)
-    }))
+    return audits.map(audit => {
+      const itemErrors = {
+        'Lotes Não Encontrados': audit.items.reduce((sum, item) => sum + (item.notFoundBatches || 0), 0),
+        'Caixas Não Cadastradas': audit.items.reduce((sum, item) => sum + (item.unregisteredBoxes || 0), 0),
+        'Local Errado': audit.items.reduce((sum, item) => sum + (item.wrongLocationBoxes || 0), 0),
+        'Quantidade Diferente': audit.items.reduce((sum, item) => sum + (item.quantityMismatches || 0), 0)
+      }
+
+      // Add sector errors if available
+      if (audit.sectorInfo) {
+        if (audit.usesBatches) {
+          itemErrors['Lotes Não Encontrados'] += audit.sectorInfo.notFoundBatches
+          itemErrors['Caixas Não Cadastradas'] += audit.sectorInfo.unregisteredBoxes
+          itemErrors['Local Errado'] += audit.sectorInfo.wrongLocationBoxes
+        }
+        itemErrors['Quantidade Diferente'] += audit.sectorInfo.quantityMismatches
+      }
+
+      return {
+        name: audit.date,
+        ...itemErrors
+      }
+    })
   }
 
-  const getSectorErrorData = () => {
-    const sectorErrors: { [key: string]: number } = {}
+  const getSectorErrorData = (): SectorErrorData[] => {
+    const sectorErrors: { [key: string]: SectorErrorData } = {}
     
     audits.forEach(audit => {
       const location = audit.location || 'Sem Local'
       if (!sectorErrors[location]) {
-        sectorErrors[location] = 0
+        sectorErrors[location] = {
+          sectorName: location,
+          totalErrors: 0,
+          expectedQuantity: 0,
+          actualQuantity: 0,
+          errorDifference: 0
+        }
       }
       
+      // Process items
       audit.items.forEach(item => {
-        sectorErrors[location] += (item.notFoundBatches || 0) + 
-                                (item.unregisteredBoxes || 0) + 
-                                (item.wrongLocationBoxes || 0) + 
-                                (item.quantityMismatches || 0)
+        sectorErrors[location].expectedQuantity += item.expectedQuantity
+        sectorErrors[location].actualQuantity += item.actualQuantity
+        
+        if (audit.usesBatches) {
+          sectorErrors[location].totalErrors += (item.notFoundBatches || 0) + 
+                                              (item.unregisteredBoxes || 0) + 
+                                              (item.wrongLocationBoxes || 0)
+        }
+        sectorErrors[location].totalErrors += (item.quantityMismatches || 0)
       })
+
+      // Process sector info
+      if (audit.sectorInfo) {
+        sectorErrors[location].expectedQuantity += audit.sectorInfo.expectedComponents
+        sectorErrors[location].actualQuantity += audit.sectorInfo.foundComponents
+        
+        if (audit.usesBatches) {
+          sectorErrors[location].totalErrors += audit.sectorInfo.notFoundBatches + 
+                                              audit.sectorInfo.unregisteredBoxes + 
+                                              audit.sectorInfo.wrongLocationBoxes
+        }
+        sectorErrors[location].totalErrors += audit.sectorInfo.quantityMismatches
+      }
+
+      // Calculate error difference
+      sectorErrors[location].errorDifference = Math.abs(
+        sectorErrors[location].expectedQuantity - sectorErrors[location].actualQuantity
+      )
     })
     
-    return Object.entries(sectorErrors)
-      .map(([sector, errors]) => ({ name: sector, value: errors }))
-      .sort((a, b) => b.value - a.value)
+    return Object.values(sectorErrors)
+      .sort((a, b) => b.totalErrors - a.totalErrors)
       .slice(0, 5) // Top 5 setores com mais erros
+  }
+
+  const getSectorErrorDifferenceData = () => {
+    const sectorErrors = getSectorErrorData()
+    return sectorErrors.map(sector => ({
+      name: sector.sectorName,
+      'Diferença Esperado vs Real': sector.errorDifference,
+      'Total de Erros': sector.totalErrors
+    }))
   }
 
   const viewAuditDetails = (audit: AuditData) => {
@@ -291,13 +374,34 @@ export default function Dashboard() {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={getSectorErrorData()}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
+              <XAxis dataKey="sectorName" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#dc2626" name="Total de Erros" />
+              <Bar dataKey="totalErrors" fill="#dc2626" name="Total de Erros" />
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* New Chart: Sector Error Difference */}
+      <div className="card">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Setores com Maior Diferença (Esperado vs Real)
+        </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Análise dos setores com maior discrepância entre quantidade esperada e quantidade real encontrada.
+        </p>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={getSectorErrorDifferenceData()}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="Diferença Esperado vs Real" fill="#ef4444" name="Diferença Esperado vs Real" />
+            <Bar dataKey="Total de Erros" fill="#6b7280" name="Total de Erros" />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       {/* Detailed Metrics */}
@@ -364,6 +468,9 @@ export default function Dashboard() {
                     Local
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tipo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Itens
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -376,8 +483,10 @@ export default function Dashboard() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {audits.slice(-5).reverse().map((audit) => {
-                  const totalExpected = audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0)
-                  const totalActual = audit.items.reduce((sum, item) => sum + item.actualQuantity, 0)
+                  const totalExpected = audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0) + 
+                                      (audit.sectorInfo?.expectedComponents || 0)
+                  const totalActual = audit.items.reduce((sum, item) => sum + item.actualQuantity, 0) + 
+                                    (audit.sectorInfo?.foundComponents || 0)
                   const accuracy = totalExpected > 0 ? ((totalExpected - Math.abs(totalExpected - totalActual)) / totalExpected) * 100 : 0
 
                   return (
@@ -390,6 +499,16 @@ export default function Dashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {audit.location}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          audit.entryType === 'rua' ? 'bg-blue-100 text-blue-800' :
+                          audit.entryType === 'classe' ? 'bg-green-100 text-green-800' :
+                          'bg-purple-100 text-purple-800'
+                        }`}>
+                          {audit.entryType === 'rua' ? 'Rua' : 
+                           audit.entryType === 'classe' ? 'Classe' : 'Produto'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {audit.items.length}
@@ -431,8 +550,10 @@ export default function Dashboard() {
           {/* Mobile Cards */}
           <div className="lg:hidden space-y-4">
             {audits.slice(-5).reverse().map((audit) => {
-              const totalExpected = audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0)
-              const totalActual = audit.items.reduce((sum, item) => sum + item.actualQuantity, 0)
+              const totalExpected = audit.items.reduce((sum, item) => sum + item.expectedQuantity, 0) + 
+                                  (audit.sectorInfo?.expectedComponents || 0)
+              const totalActual = audit.items.reduce((sum, item) => sum + item.actualQuantity, 0) + 
+                                (audit.sectorInfo?.foundComponents || 0)
               const accuracy = totalExpected > 0 ? ((totalExpected - Math.abs(totalExpected - totalActual)) / totalExpected) * 100 : 0
 
               return (
@@ -461,6 +582,17 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">Tipo:</span>
+                      <span className={`ml-1 font-medium ${
+                        audit.entryType === 'rua' ? 'text-blue-600' :
+                        audit.entryType === 'classe' ? 'text-green-600' :
+                        'text-purple-600'
+                      }`}>
+                        {audit.entryType === 'rua' ? 'Rua' : 
+                         audit.entryType === 'classe' ? 'Classe' : 'Produto'}
+                      </span>
+                    </div>
                     <div>
                       <span className="text-gray-500">Itens:</span>
                       <span className="ml-1 font-medium">{audit.items.length}</span>
@@ -500,7 +632,7 @@ export default function Dashboard() {
             </div>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b pb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 border-b pb-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Data</p>
                   <p className="text-sm text-gray-900">{new Date(selectedAudit.date).toLocaleDateString('pt-BR')}</p>
@@ -513,75 +645,86 @@ export default function Dashboard() {
                   <p className="text-sm font-medium text-gray-500">Local</p>
                   <p className="text-sm text-gray-900">{selectedAudit.location}</p>
                 </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Tipo</p>
+                  <p className="text-sm text-gray-900">
+                    {selectedAudit.entryType === 'rua' ? 'Rua' : 
+                     selectedAudit.entryType === 'classe' ? 'Classe' : 'Produto'}
+                  </p>
+                </div>
               </div>
 
-                             {selectedAudit.sectorInfo && (
-                 <div className="border-b pb-4">
-                   <h4 className="text-md font-semibold text-gray-900 mb-3">Informações do Setor</h4>
-                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
-                     <div className="text-center">
-                       <p className="text-lg font-bold text-primary-600">
-                         {selectedAudit.sectorInfo.sectorName}
-                       </p>
-                       <p className="text-xs text-gray-500">Nome do Setor</p>
-                     </div>
-                     <div className="text-center">
-                       <p className="text-lg font-bold text-success-600">
-                         {selectedAudit.sectorInfo.totalComponents}
-                       </p>
-                       <p className="text-xs text-gray-500">Total Componentes</p>
-                     </div>
-                     <div className="text-center">
-                       <p className="text-lg font-bold text-info-600">
-                         {selectedAudit.sectorInfo.expectedComponents}
-                       </p>
-                       <p className="text-xs text-gray-500">Esperados</p>
-                     </div>
-                     <div className="text-center">
-                       <p className="text-lg font-bold text-warning-600">
-                         {selectedAudit.sectorInfo.foundComponents}
-                       </p>
-                       <p className="text-xs text-gray-500">Encontrados</p>
-                     </div>
-                   </div>
-                   {selectedAudit.sectorInfo.notes && (
-                     <div className="bg-blue-50 p-3 rounded">
-                       <p className="text-sm font-medium text-gray-700">Observações:</p>
-                       <p className="text-sm text-gray-600">{selectedAudit.sectorInfo.notes}</p>
-                     </div>
-                   )}
-                 </div>
-               )}
+              {selectedAudit.sectorInfo && (
+                <div className="border-b pb-4">
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Informações do Setor</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-primary-600">
+                        {selectedAudit.sectorInfo.sectorName}
+                      </p>
+                      <p className="text-xs text-gray-500">Nome do Setor</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-success-600">
+                        {selectedAudit.sectorInfo.totalComponents}
+                      </p>
+                      <p className="text-xs text-gray-500">Total Componentes</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-info-600">
+                        {selectedAudit.sectorInfo.expectedComponents}
+                      </p>
+                      <p className="text-xs text-gray-500">Esperados</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-warning-600">
+                        {selectedAudit.sectorInfo.foundComponents}
+                      </p>
+                      <p className="text-xs text-gray-500">Encontrados</p>
+                    </div>
+                  </div>
+                  {selectedAudit.sectorInfo.notes && (
+                    <div className="bg-blue-50 p-3 rounded">
+                      <p className="text-sm font-medium text-gray-700">Observações:</p>
+                      <p className="text-sm text-gray-600">{selectedAudit.sectorInfo.notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
-               <div className="border-b pb-4">
-                 <h4 className="text-md font-semibold text-gray-900 mb-3">Resumo de Erros</h4>
-                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                   <div className="text-center">
-                     <p className="text-2xl font-bold text-danger-600">
-                       {selectedAudit.items.reduce((sum, item) => sum + (item.notFoundBatches || 0), 0)}
-                     </p>
-                     <p className="text-xs text-gray-500">❌ Lotes Não Encontrados</p>
-                   </div>
-                   <div className="text-center">
-                     <p className="text-2xl font-bold text-gray-600">
-                       {selectedAudit.items.reduce((sum, item) => sum + (item.unregisteredBoxes || 0), 0)}
-                     </p>
-                     <p className="text-xs text-gray-500">📦 Caixas Não Cadastradas</p>
-                   </div>
-                   <div className="text-center">
-                     <p className="text-2xl font-bold text-warning-600">
-                       {selectedAudit.items.reduce((sum, item) => sum + (item.wrongLocationBoxes || 0), 0)}
-                     </p>
-                     <p className="text-xs text-gray-500">⚠️ Local Errado</p>
-                   </div>
-                   <div className="text-center">
-                     <p className="text-2xl font-bold text-blue-600">
-                       {selectedAudit.items.reduce((sum, item) => sum + (item.quantityMismatches || 0), 0)}
-                     </p>
-                     <p className="text-xs text-gray-500">🔢 Quantidade Diferente</p>
-                   </div>
-                 </div>
-               </div>
+              <div className="border-b pb-4">
+                <h4 className="text-md font-semibold text-gray-900 mb-3">Resumo de Erros</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-danger-600">
+                      {selectedAudit.items.reduce((sum, item) => sum + (item.notFoundBatches || 0), 0) +
+                       (selectedAudit.sectorInfo?.notFoundBatches || 0)}
+                    </p>
+                    <p className="text-xs text-gray-500">❌ Lotes Não Encontrados</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-600">
+                      {selectedAudit.items.reduce((sum, item) => sum + (item.unregisteredBoxes || 0), 0) +
+                       (selectedAudit.sectorInfo?.unregisteredBoxes || 0)}
+                    </p>
+                    <p className="text-xs text-gray-500">📦 Caixas Não Cadastradas</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-warning-600">
+                      {selectedAudit.items.reduce((sum, item) => sum + (item.wrongLocationBoxes || 0), 0) +
+                       (selectedAudit.sectorInfo?.wrongLocationBoxes || 0)}
+                    </p>
+                    <p className="text-xs text-gray-500">⚠️ Local Errado</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {selectedAudit.items.reduce((sum, item) => sum + (item.quantityMismatches || 0), 0) +
+                       (selectedAudit.sectorInfo?.quantityMismatches || 0)}
+                    </p>
+                    <p className="text-xs text-gray-500">🔢 Quantidade Diferente</p>
+                  </div>
+                </div>
+              </div>
 
               <div>
                 <h4 className="text-md font-semibold text-gray-900 mb-3">Itens Auditados ({selectedAudit.items.length})</h4>
@@ -594,8 +737,12 @@ export default function Dashboard() {
                           <p className="text-xs text-gray-500">Esperado: {item.expectedQuantity} | Real: {item.actualQuantity}</p>
                         </div>
                         <div className="text-right text-xs">
-                          <p className="text-gray-500">Lote: {item.batchNumber}</p>
-                          <p className="text-gray-500">Caixa: {item.boxNumber}</p>
+                          {selectedAudit.usesBatches && (
+                            <>
+                              <p className="text-gray-500">Lote: {item.batchNumber}</p>
+                              <p className="text-gray-500">Caixa: {item.boxNumber}</p>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

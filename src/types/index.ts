@@ -5,6 +5,8 @@ export interface AuditData {
   location: string
   items: AuditItem[]
   sectorInfo?: SectorInfo
+  entryType: 'rua' | 'classe' | 'produto'
+  usesBatches: boolean
 }
 
 export interface SectorInfo {
@@ -45,4 +47,12 @@ export interface AuditSummary {
   wrongLocationBoxes: number
   quantityMismatches: number
   accuracyPercentage: number
+}
+
+export interface SectorErrorData {
+  sectorName: string
+  totalErrors: number
+  expectedQuantity: number
+  actualQuantity: number
+  errorDifference: number
 } 

@@ -1,6 +1,10 @@
 # Dashboard de Auditoria de Estoque
 
-Um sistema moderno e profissional para auditoria de estoque com duas telas principais: entrada de dados e análise gráfica.
+Sistema completo para auditoria de estoque com interface moderna e responsiva.
+
+## ✅ Deploy Automático Testado
+
+O Vercel está configurado para fazer deploy automático sempre que houver novos commits no GitHub.
 
 ## 🚀 Funcionalidades
 
