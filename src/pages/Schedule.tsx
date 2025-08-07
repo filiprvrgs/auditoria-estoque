@@ -19,6 +19,8 @@ interface AuditSchedule {
 }
 
 export default function Schedule() {
+  console.log('🚨 COMPONENTE SCHEDULE RENDERIZADO!')
+  
   const [schedules, setSchedules] = useState<AuditSchedule[]>([])
   const [audits, setAudits] = useState<AuditData[]>([])
   const [showAddModal, setShowAddModal] = useState(false)
@@ -288,6 +290,18 @@ export default function Schedule() {
 
   return (
     <div className="space-y-6">
+      {/* Texto de teste */}
+      <div style={{ 
+        backgroundColor: 'yellow', 
+        padding: '20px', 
+        fontSize: '24px', 
+        fontWeight: 'bold',
+        textAlign: 'center',
+        border: '3px solid red'
+      }}>
+        🚨 PÁGINA DO CRONOGRAMA CARREGADA! 🚨
+      </div>
+
       {/* Botão de teste SUPER VISÍVEL */}
       <div style={{ 
         position: 'fixed', 
