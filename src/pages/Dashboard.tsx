@@ -208,7 +208,7 @@ export default function Dashboard() {
               <Package className="h-8 w-8 text-primary-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total de Itens</p>
+              <p className="text-sm font-medium text-gray-500">Total de Auditorias</p>
               <p className="text-2xl font-semibold text-gray-900">{summary.totalItems}</p>
             </div>
           </div>
@@ -423,7 +423,7 @@ export default function Dashboard() {
                     Tipo
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Itens
+                    Auditorias
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Precisão
