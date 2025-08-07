@@ -288,6 +288,24 @@ export default function Schedule() {
 
   return (
     <div className="space-y-6">
+      {/* Botão de teste SUPER VISÍVEL */}
+      <div style={{ 
+        position: 'fixed', 
+        top: '10px', 
+        right: '10px', 
+        zIndex: 9999,
+        backgroundColor: 'red',
+        color: 'white',
+        padding: '20px',
+        fontSize: '20px',
+        fontWeight: 'bold',
+        border: '5px solid yellow'
+      }}>
+        <button onClick={() => alert('BOTÃO FUNCIONANDO!')}>
+          🚨 BOTÃO TESTE 🚨
+        </button>
+      </div>
+
       {/* Header */}
       <div className="card">
         <div className="flex justify-between items-center">
