@@ -519,7 +519,7 @@ export default function Schedule() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {getRelatedAudits(selectedSchedule).map((audit, index) => (
+                      {getRelatedAudits(selectedSchedule).map((audit: any, index: number) => (
                         <tr key={index}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{audit.date}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{audit.auditor}</td>
