@@ -184,7 +184,9 @@ export default function Schedule() {
       warehouse: '',
       status: 'pending',
       isCompleted: false,
-      lastAuditDate: null
+      lastAuditDate: null,
+      month: selectedMonth,
+      year: selectedYear
     })
     setShowModal(true)
   }
@@ -261,9 +263,32 @@ export default function Schedule() {
     }
   }
 
-  const totalSchedules = schedules.length
-  const completedSchedules = schedules.filter(s => s.status === 'completed').length
-  const pendingSchedules = schedules.filter(s => s.status === 'pending').length
+  // Filtrar classes do mês selecionado
+  const filteredSchedules = schedules.filter(schedule => {
+    // Mostrar classes do mês selecionado OU classes que foram auditadas no mês selecionado
+    const isFromSelectedMonth = schedule.month === selectedMonth && schedule.year === selectedYear
+    
+    // Verificar se há auditorias desta classe no mês selecionado
+    const hasAuditsInSelectedMonth = audits.some(audit => {
+      const auditDate = new Date(audit.date)
+      const isSelectedMonth = auditDate.getMonth() === selectedMonth && 
+                           auditDate.getFullYear() === selectedYear
+      
+      return isSelectedMonth && audit.entryType === 'classe' && 
+        audit.items.some((item: any) => {
+          const exactMatch = item.productCode === schedule.classCode
+          const containsMatch = item.productCode && item.productCode.includes(schedule.classCode)
+          const nameMatch = item.productName && item.productName.includes(schedule.classCode)
+          return exactMatch || containsMatch || nameMatch
+        })
+    })
+    
+    return isFromSelectedMonth || hasAuditsInSelectedMonth
+  })
+
+  const totalSchedules = filteredSchedules.length
+  const completedSchedules = filteredSchedules.filter(s => s.status === 'completed').length
+  const pendingSchedules = filteredSchedules.filter(s => s.status === 'pending').length
   const completionRate = totalSchedules > 0 
     ? Math.round((completedSchedules / totalSchedules) * 100) 
     : 0
@@ -399,7 +424,29 @@ export default function Schedule() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {schedules.map((schedule) => (
+                {schedules
+                  .filter(schedule => {
+                    // Mostrar classes do mês selecionado OU classes que foram auditadas no mês selecionado
+                    const isFromSelectedMonth = schedule.month === selectedMonth && schedule.year === selectedYear
+                    
+                    // Verificar se há auditorias desta classe no mês selecionado
+                    const hasAuditsInSelectedMonth = audits.some(audit => {
+                      const auditDate = new Date(audit.date)
+                      const isSelectedMonth = auditDate.getMonth() === selectedMonth && 
+                                           auditDate.getFullYear() === selectedYear
+                      
+                      return isSelectedMonth && audit.entryType === 'classe' && 
+                        audit.items.some((item: any) => {
+                          const exactMatch = item.productCode === schedule.classCode
+                          const containsMatch = item.productCode && item.productCode.includes(schedule.classCode)
+                          const nameMatch = item.productName && item.productName.includes(schedule.classCode)
+                          return exactMatch || containsMatch || nameMatch
+                        })
+                    })
+                    
+                    return isFromSelectedMonth || hasAuditsInSelectedMonth
+                  })
+                  .map((schedule) => (
                   <tr key={schedule.id} className={schedule.isCompleted ? 'bg-green-50' : ''}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
