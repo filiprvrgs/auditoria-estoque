@@ -101,7 +101,14 @@ export default function Schedule() {
       const allClassAudits = audits.filter(audit => {
         // Verificar se a auditoria é do tipo 'classe' e corresponde ao código da classe
         const matchesClass = audit.entryType === 'classe' && 
-          audit.items.some((item: any) => item.productCode === schedule.classCode)
+          audit.items.some((item: any) => {
+            // Verificar correspondência exata do código ou se o código está contido no item
+            const exactMatch = item.productCode === schedule.classCode
+            const containsMatch = item.productCode && item.productCode.includes(schedule.classCode)
+            const nameMatch = item.productName && item.productName.includes(schedule.classCode)
+            
+            return exactMatch || containsMatch || nameMatch
+          })
         
         return matchesClass
       })
@@ -131,12 +138,15 @@ export default function Schedule() {
       }
     })
 
-    // Só atualizar se houve mudança real
-    const hasChanges = JSON.stringify(updatedSchedules) !== JSON.stringify(schedules)
-    if (hasChanges) {
-      setSchedules(updatedSchedules)
-      localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
-    }
+    // Sempre atualizar para garantir sincronização
+    setSchedules(updatedSchedules)
+    localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
+    
+    console.log('Sincronização executada:', {
+      totalSchedules: updatedSchedules.length,
+      completedSchedules: updatedSchedules.filter(s => s.status === 'completed').length,
+      auditoriasTipoClasse: audits.filter(a => a.entryType === 'classe').length
+    })
   }
 
   // Atualizar quando mudar mês/ano ou quando houver novas auditorias
@@ -284,6 +294,20 @@ export default function Schedule() {
           >
             <RefreshCw size={20} />
             Atualizar Status
+          </button>
+
+          <button
+            onClick={() => {
+              console.log('=== DEBUG CRONOGRAMA ===')
+              console.log('Cronogramas:', schedules)
+              console.log('Auditorias:', audits)
+              console.log('Auditorias tipo classe:', audits.filter(a => a.entryType === 'classe'))
+              syncProgressWithAudits()
+            }}
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <RefreshCw size={20} />
+            Debug
           </button>
         </div>
 
