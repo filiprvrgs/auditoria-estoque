@@ -140,7 +140,8 @@ export default function DataEntry() {
     alert('Auditoria salva com sucesso!')
     setAuditData({
       id: '',
-      date: new Date().toISOString().split('T')[0],
+      // Mantém a data escolhida pelo usuário em vez de voltar para a data atual
+      date: auditData.date,
       auditor: '',
       location: '',
       items: [],

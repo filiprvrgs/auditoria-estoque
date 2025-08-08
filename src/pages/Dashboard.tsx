@@ -442,7 +442,15 @@ export default function Dashboard() {
                   return (
                     <tr key={audit.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(audit.date).toLocaleDateString('pt-BR')}
+                        {(() => {
+                          // Garantir que datas em formato YYYY-MM-DD não sofram deslocamento de fuso
+                          const d = audit.date
+                          if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                            const [y, m, day] = d.split('-').map(Number)
+                            return new Date(y, (m || 1) - 1, day).toLocaleDateString('pt-BR')
+                          }
+                          return new Date(d).toLocaleDateString('pt-BR')
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {audit.auditor}
@@ -510,7 +518,14 @@ export default function Dashboard() {
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-900">{audit.location}</h4>
                       <p className="text-sm text-gray-500">{audit.auditor}</p>
-                      <p className="text-xs text-gray-400">{new Date(audit.date).toLocaleDateString('pt-BR')}</p>
+                      <p className="text-xs text-gray-400">{(() => {
+                        const d = audit.date
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                          const [y, m, day] = d.split('-').map(Number)
+                          return new Date(y, (m || 1) - 1, day).toLocaleDateString('pt-BR')
+                        }
+                        return new Date(d).toLocaleDateString('pt-BR')
+                      })()}</p>
                     </div>
                     <div className="flex space-x-2">
                       <button
@@ -583,7 +598,14 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 border-b pb-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Data</p>
-                  <p className="text-sm text-gray-900">{new Date(selectedAudit.date).toLocaleDateString('pt-BR')}</p>
+                  <p className="text-sm text-gray-900">{(() => {
+                    const d = selectedAudit.date
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                      const [y, m, day] = d.split('-').map(Number)
+                      return new Date(y, (m || 1) - 1, day).toLocaleDateString('pt-BR')
+                    }
+                    return new Date(d).toLocaleDateString('pt-BR')
+                  })()}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Auditor</p>
@@ -683,7 +705,14 @@ export default function Dashboard() {
               <div className="bg-gray-50 p-3 rounded">
                 <p className="text-sm font-medium text-gray-900">{selectedAudit.location}</p>
                 <p className="text-xs text-gray-500">
-                  {new Date(selectedAudit.date).toLocaleDateString('pt-BR')} - {selectedAudit.auditor}
+                  {(() => {
+                    const d = selectedAudit.date
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+                      const [y, m, day] = d.split('-').map(Number)
+                      return new Date(y, (m || 1) - 1, day).toLocaleDateString('pt-BR')
+                    }
+                    return new Date(d).toLocaleDateString('pt-BR')
+                  })()} - {selectedAudit.auditor}
                 </p>
                 <p className="text-xs text-gray-500">{selectedAudit.items.length} itens</p>
               </div>
