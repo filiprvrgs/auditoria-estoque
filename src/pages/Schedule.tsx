@@ -399,11 +399,18 @@ export default function Schedule() {
     !addedSuggestions.includes(suggestion.originalAuditId)
   )
 
+  // Estados para modais
+  const [showIgnoreModal, setShowIgnoreModal] = useState(false)
+  const [showRestoreModal, setShowRestoreModal] = useState(false)
+  const [suggestionToIgnore, setSuggestionToIgnore] = useState<string | null>(null)
+
   // Função para ignorar sugestão
   const ignoreSuggestion = (auditId: string) => {
     const updatedIgnored = [...ignoredSuggestions, auditId]
     setIgnoredSuggestions(updatedIgnored)
     localStorage.setItem('ignoredAuditPlusSuggestions', JSON.stringify(updatedIgnored))
+    setShowIgnoreModal(false)
+    setSuggestionToIgnore(null)
   }
 
   return (
@@ -479,14 +486,7 @@ export default function Schedule() {
 
           {(ignoredSuggestions.length > 0 || addedSuggestions.length > 0) && (
             <button
-              onClick={() => {
-                if (confirm('Deseja restaurar todas as sugestões ignoradas e adicionadas?')) {
-                  setIgnoredSuggestions([])
-                  setAddedSuggestions([])
-                  localStorage.removeItem('ignoredAuditPlusSuggestions')
-                  localStorage.removeItem('addedAuditPlusSuggestions')
-                }
-              }}
+              onClick={() => setShowRestoreModal(true)}
               className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
             >
               <CheckCircle size={20} />
@@ -661,9 +661,8 @@ export default function Schedule() {
                           </button>
                           <button
                             onClick={() => {
-                              if (confirm('Tem certeza que deseja ignorar esta sugestão? Ela não aparecerá mais nas sugestões.')) {
-                                ignoreSuggestion(suggestion.originalAuditId)
-                              }
+                              setSuggestionToIgnore(suggestion.originalAuditId)
+                              setShowIgnoreModal(true)
                             }}
                             className="text-red-600 hover:text-red-900"
                             title="Ignorar sugestão"
@@ -915,7 +914,103 @@ export default function Schedule() {
             </div>
           </div>
         )}
-      </div>
+
+      {/* Modal de Ignorar Sugestão */}
+      {showIgnoreModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Ignorar Sugestão
+                </h3>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-600 mb-6">
+                Tem certeza que deseja ignorar esta sugestão? Ela não aparecerá mais nas sugestões de Auditoria Plus.
+              </p>
+              
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowIgnoreModal(false)
+                    setSuggestionToIgnore(null)
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => suggestionToIgnore && ignoreSuggestion(suggestionToIgnore)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  Ignorar Sugestão
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Restaurar Sugestões */}
+      {showRestoreModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Restaurar Sugestões
+                </h3>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">
+                Deseja restaurar todas as sugestões ignoradas e adicionadas?
+              </p>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Sugestões ignoradas:</span>
+                  <span className="font-medium">{ignoredSuggestions.length}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Sugestões adicionadas:</span>
+                  <span className="font-medium">{addedSuggestions.length}</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowRestoreModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setIgnoredSuggestions([])
+                    setAddedSuggestions([])
+                    localStorage.removeItem('ignoredAuditPlusSuggestions')
+                    localStorage.removeItem('addedAuditPlusSuggestions')
+                    setShowRestoreModal(false)
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  Restaurar Todas
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
