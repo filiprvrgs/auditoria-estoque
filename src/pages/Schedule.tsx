@@ -315,25 +315,18 @@ export default function Schedule() {
           productCode: item.productCode,
           productName: item.productName,
           status: item.status,
-          quantity: item.quantity
+          quantity: item.quantity,
+          allKeys: Object.keys(item)
         }))
       })
       
-      // Calcular precisão da auditoria
+      // Calcular precisão da auditoria usando a mesma fórmula do Dashboard
       let precision = 100
       
-      // Usar a precisão já calculada e salva na auditoria
-      if (audit.precision !== undefined && audit.precision !== null) {
-        precision = audit.precision
-      } else {
-        // Fallback: tentar calcular baseado nos itens
-        if (audit.items && audit.items.length > 0) {
-          const totalItems = audit.items.length
-          const correctItems = audit.items.filter((item: any) => 
-            item.status === 'correct' || item.status === 'ok'
-          ).length
-          precision = Math.round((correctItems / totalItems) * 100)
-        }
+      if (audit.items && audit.items.length > 0) {
+        const totalExpected = audit.items.reduce((sum: number, item: any) => sum + (item.expectedQuantity || 0), 0)
+        const totalActual = audit.items.reduce((sum: number, item: any) => sum + (item.actualQuantity || 0), 0)
+        precision = totalExpected > 0 ? ((totalExpected - Math.abs(totalExpected - totalActual)) / totalExpected) * 100 : 0
       }
       
       // Debug: logar precisão calculada
@@ -363,18 +356,13 @@ export default function Schedule() {
         })
       )
 
-      // Calcular precisão
+      // Calcular precisão usando a mesma fórmula do Dashboard
       let precision = 100
       
-      // Primeiro tentar usar a precisão já calculada
-      if (audit.precision !== undefined) {
-        precision = audit.precision
-      } else if (audit.items && audit.items.length > 0) {
-        const totalItems = audit.items.length
-        const correctItems = audit.items.filter((item: any) => 
-          item.status === 'correct' || item.status === 'ok'
-        ).length
-        precision = Math.round((correctItems / totalItems) * 100)
+      if (audit.items && audit.items.length > 0) {
+        const totalExpected = audit.items.reduce((sum: number, item: any) => sum + (item.expectedQuantity || 0), 0)
+        const totalActual = audit.items.reduce((sum: number, item: any) => sum + (item.actualQuantity || 0), 0)
+        precision = totalExpected > 0 ? ((totalExpected - Math.abs(totalExpected - totalActual)) / totalExpected) * 100 : 0
       }
 
       return {
