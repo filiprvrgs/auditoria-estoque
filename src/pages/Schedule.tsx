@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Calendar, CheckCircle, RefreshCw, Clock } from 'lucide-react'
+import { Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react'
 
 export default function Schedule() {
   const [schedules, setSchedules] = useState<any[]>([])
