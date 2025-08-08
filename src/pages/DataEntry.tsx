@@ -101,10 +101,41 @@ export default function DataEntry() {
       return
     }
 
+    // Salvar a auditoria
     const audits = JSON.parse(localStorage.getItem('audits') || '[]')
     const auditWithId = { ...auditData, id: Date.now().toString() }
     audits.push(auditWithId)
     localStorage.setItem('audits', JSON.stringify(audits))
+
+    // Se for uma auditoria de classe, atualizar o cronograma
+    if (auditData.entryType === 'classe') {
+      const schedules = JSON.parse(localStorage.getItem('auditSchedules') || '[]')
+      const updatedSchedules = schedules.map(schedule => {
+        // Verificar se algum item da auditoria corresponde ao código da classe
+        const matchingItems = auditData.items.filter(item => 
+          item.productCode === schedule.classCode
+        )
+
+        if (matchingItems.length > 0) {
+          const currentMonth = new Date().getMonth()
+          const currentYear = new Date().getFullYear()
+          const auditMonth = new Date(auditData.date).getMonth()
+          const auditYear = new Date(auditData.date).getFullYear()
+
+          // Só atualizar se a auditoria for do mês atual
+          if (currentMonth === auditMonth && currentYear === auditYear) {
+            return {
+              ...schedule,
+              completedThisMonth: (schedule.completedThisMonth || 0) + 1,
+              status: schedule.monthlyTarget <= (schedule.completedThisMonth || 0) + 1 ? 'completed' : 'in-progress'
+            }
+          }
+        }
+        return schedule
+      })
+
+      localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
+    }
     
     alert('Auditoria salva com sucesso!')
     setAuditData({
@@ -261,14 +292,14 @@ export default function DataEntry() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {auditData.entryType === 'rua' ? 'Nome da Rua' : 
-               auditData.entryType === 'classe' ? 'Nome da Classe' : 'Código do Produto'}
+               auditData.entryType === 'classe' ? 'Código da Classe' : 'Código do Produto'}
             </label>
             <input
               type="text"
               value={newItem.productCode}
               onChange={(e) => setNewItem(prev => ({ ...prev, productCode: e.target.value }))}
               placeholder={auditData.entryType === 'rua' ? 'Nome da rua' : 
-                         auditData.entryType === 'classe' ? 'Nome da classe' : 'Código'}
+                         auditData.entryType === 'classe' ? 'Código da classe' : 'Código'}
               className="input-field"
             />
           </div>
