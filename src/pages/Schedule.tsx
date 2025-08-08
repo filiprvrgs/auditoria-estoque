@@ -94,6 +94,8 @@ export default function Schedule() {
 
   // Sincronizar progresso com auditorias realizadas
   const syncProgressWithAudits = () => {
+    if (schedules.length === 0) return // Não executar se não houver cronogramas
+
     const updatedSchedules = schedules.map(schedule => {
       // Buscar TODAS as auditorias da classe (não filtrar por mês)
       const allClassAudits = audits.filter(audit => {
@@ -129,14 +131,20 @@ export default function Schedule() {
       }
     })
 
-    setSchedules(updatedSchedules)
-    localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
+    // Só atualizar se houve mudança real
+    const hasChanges = JSON.stringify(updatedSchedules) !== JSON.stringify(schedules)
+    if (hasChanges) {
+      setSchedules(updatedSchedules)
+      localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
+    }
   }
 
   // Atualizar quando mudar mês/ano ou quando houver novas auditorias
   useEffect(() => {
-    syncProgressWithAudits()
-  }, [selectedMonth, selectedYear, audits])
+    if (schedules.length > 0) {
+      syncProgressWithAudits()
+    }
+  }, [selectedMonth, selectedYear, audits.length])
 
   const addSchedule = () => {
     setEditingSchedule({
