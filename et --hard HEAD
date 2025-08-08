@@ -1,8 +1,3 @@
-[33mee4ba78[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m test: adicionar logs e texto de teste para debug
-[33m11a8259[m test: adicionar botão de teste super visível para debug
-[33m9173e8a[m fix: reorganizar botões do cabeçalho para garantir visibilidade
-[33me502ca1[m fix: tornar botão sincronizar mais visível e adicionar debug
-[33m53340f9[m fix: melhorar integração cronograma com auditorias usando código da classe
 
                    SSUUMMMMAARRYY OOFF LLEESSSS CCOOMMMMAANNDDSS
 
@@ -327,13 +322,3 @@
  TAB ...................................... Complete filename & cycle.
  SHIFT-TAB ...................... ESC-TAB   Complete filename & reverse cycle.
  ctrl-L ................................... Complete filename, list all.
-[33mebdebb6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: corrigir erros TypeScript no Schedule.tsx
-[33me878d98[m feat: restaurar funcionalidade completa do cronograma de auditorias
-[33m0ca16f3[m fix: corrigir erro TypeScript no Schedule.tsx
-[33m9adbe68[m test: componente super simples para debug
-[33m743daf5[m force: atualização forçada com elementos super visíveis
-[33mee4ba78[m test: adicionar logs e texto de teste para debug
-[33m11a8259[m test: adicionar botão de teste super visível para debug
-[33m9173e8a[m fix: reorganizar botões do cabeçalho para garantir visibilidade
-[33me502ca1[m fix: tornar botão sincronizar mais visível e adicionar debug
-[33m53340f9[m fix: melhorar integração cronograma com auditorias usando código da classe
