@@ -304,9 +304,22 @@ export default function Schedule() {
       const isRecent = auditDate >= threeMonthsAgo
       const isClassAudit = audit.entryType === 'classe'
       
+      // Debug: logar estrutura da auditoria
+      console.log('Analisando auditoria:', {
+        id: audit.id,
+        date: audit.date,
+        entryType: audit.entryType,
+        items: audit.items,
+        precision: audit.precision
+      })
+      
       // Calcular precisão da auditoria
       let precision = 100
-      if (audit.items && audit.items.length > 0) {
+      
+      // Primeiro tentar usar a precisão já calculada
+      if (audit.precision !== undefined) {
+        precision = audit.precision
+      } else if (audit.items && audit.items.length > 0) {
         const totalItems = audit.items.length
         const correctItems = audit.items.filter((item: any) => 
           item.status === 'correct' || item.status === 'ok'
@@ -314,8 +327,13 @@ export default function Schedule() {
         precision = Math.round((correctItems / totalItems) * 100)
       }
       
+      // Debug: logar precisão calculada
+      console.log('Precisão calculada:', precision)
+      
       // Considerar baixa precisão se < 80%
       const isLowPrecision = precision < 80
+      
+      console.log('É baixa precisão?', isLowPrecision)
       
       return isRecent && isClassAudit && isLowPrecision
     })
@@ -338,7 +356,11 @@ export default function Schedule() {
 
       // Calcular precisão
       let precision = 100
-      if (audit.items && audit.items.length > 0) {
+      
+      // Primeiro tentar usar a precisão já calculada
+      if (audit.precision !== undefined) {
+        precision = audit.precision
+      } else if (audit.items && audit.items.length > 0) {
         const totalItems = audit.items.length
         const correctItems = audit.items.filter((item: any) => 
           item.status === 'correct' || item.status === 'ok'
@@ -419,6 +441,20 @@ export default function Schedule() {
           >
             <CheckCircle size={20} />
             Forçar Sincronização
+          </button>
+
+          <button
+            onClick={() => {
+              console.log('=== DEBUG AUDITORIA PLUS ===')
+              console.log('Todas as auditorias:', audits)
+              console.log('Auditorias tipo classe:', audits.filter(a => a.entryType === 'classe'))
+              console.log('Sugestões geradas:', auditPlusSuggestions)
+              console.log('Auditorias com baixa precisão:', getLowPrecisionAudits())
+            }}
+            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <Target size={20} />
+            Debug Auditoria Plus
           </button>
         </div>
 
