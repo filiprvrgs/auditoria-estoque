@@ -3,10 +3,21 @@ import { Plus, Edit, Trash2, Calendar, CheckCircle, RefreshCw } from 'lucide-rea
 
 // TESTE: Forçar deploy com dropdowns funcionais
 export default function Schedule() {
-  const [schedules, setSchedules] = useState<any[]>(() => {
+  const [schedules, setSchedules] = useState<any[]>([])
+
+  // Carregar dados do localStorage
+  useEffect(() => {
     const saved = localStorage.getItem('auditSchedules')
-    return saved ? JSON.parse(saved) : []
-  })
+    if (saved) {
+      try {
+        const parsedSchedules = JSON.parse(saved)
+        setSchedules(parsedSchedules)
+      } catch (error) {
+        console.error('Erro ao carregar cronogramas:', error)
+        localStorage.removeItem('auditSchedules')
+      }
+    }
+  }, [])
 
   const [audits] = useState<any[]>(() => {
     const saved = localStorage.getItem('audits')
@@ -36,13 +47,11 @@ export default function Schedule() {
 
   // Galpões do sistema
   const warehouses = [
+    'Galpão 01',
     'Galpão 02',
-    'Galpão 02-03',
     'Galpão 03',
-    'Galpão 03-04',
     'Galpão 04',
-    'Galpão 05',
-    'Todos no Galpão 03'
+    'Galpão 05'
   ]
 
   // Sincronizar progresso com auditorias realizadas
@@ -113,16 +122,36 @@ export default function Schedule() {
   }
 
   const deleteSchedule = (id: string) => {
-    setSchedules(schedules.filter(s => s.id !== id))
+    const updatedSchedules = schedules.filter(s => s.id !== id)
+    setSchedules(updatedSchedules)
+    try {
+      localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
+      console.log('Cronograma deletado com sucesso!')
+    } catch (error) {
+      console.error('Erro ao deletar cronograma:', error)
+      alert('Erro ao deletar o cronograma. Por favor, tente novamente.')
+    }
   }
 
   const saveSchedule = () => {
     if (!editingSchedule) return
 
+    let updatedSchedules
     if (editingSchedule.id) {
-      setSchedules(schedules.map(s => s.id === editingSchedule.id ? editingSchedule : s))
+      updatedSchedules = schedules.map(s => s.id === editingSchedule.id ? editingSchedule : s)
     } else {
-      setSchedules([...schedules, { ...editingSchedule, id: Date.now().toString() }])
+      updatedSchedules = [...schedules, { ...editingSchedule, id: Date.now().toString() }]
+    }
+
+    // Salvar no estado e localStorage
+    setSchedules(updatedSchedules)
+    try {
+      localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
+      console.log('Cronograma salvo com sucesso!')
+    } catch (error) {
+      console.error('Erro ao salvar cronograma:', error)
+      alert('Erro ao salvar o cronograma. Por favor, tente novamente.')
+      return
     }
 
     setShowModal(false)
