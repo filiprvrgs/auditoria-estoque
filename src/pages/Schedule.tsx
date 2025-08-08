@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Target } from 'lucide-react'
 
 export default function Schedule() {
@@ -6,14 +6,14 @@ export default function Schedule() {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
   // Dicionário opcional carregado do localStorage para auto-preenchimento por código
-  const [classDictionary, setClassDictionary] = useState<Record<string, { name: string, category?: string, warehouse?: string }>>(() => {
+  const classDictionary = useMemo<Record<string, { name: string, category?: string, warehouse?: string }>>(() => {
     try {
       const saved = localStorage.getItem('classDictionary')
       return saved ? JSON.parse(saved) : {}
     } catch {
       return {}
     }
-  })
+  }, [])
 
   // Carregar dados do localStorage
   useEffect(() => {
