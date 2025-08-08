@@ -393,16 +393,16 @@ export default function Schedule() {
     return saved ? JSON.parse(saved) : []
   })
 
+  // Estados para modais
+  const [showIgnoreModal, setShowIgnoreModal] = useState(false)
+  const [showRestoreModal, setShowRestoreModal] = useState(false)
+  const [suggestionToIgnore, setSuggestionToIgnore] = useState<string | null>(null)
+
   // Filtrar sugestões ignoradas e já adicionadas
   const auditPlusSuggestions = generateAuditPlusSuggestions().filter(suggestion => 
     !ignoredSuggestions.includes(suggestion.originalAuditId) &&
     !addedSuggestions.includes(suggestion.originalAuditId)
   )
-
-  // Estados para modais
-  const [showIgnoreModal, setShowIgnoreModal] = useState(false)
-  const [showRestoreModal, setShowRestoreModal] = useState(false)
-  const [suggestionToIgnore, setSuggestionToIgnore] = useState<string | null>(null)
 
   // Função para ignorar sugestão
   const ignoreSuggestion = (auditId: string) => {
