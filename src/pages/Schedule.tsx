@@ -387,9 +387,16 @@ export default function Schedule() {
     return saved ? JSON.parse(saved) : []
   })
 
-  // Filtrar sugestões ignoradas
+  // Estado para sugestões adicionadas ao cronograma
+  const [addedSuggestions, setAddedSuggestions] = useState<string[]>(() => {
+    const saved = localStorage.getItem('addedAuditPlusSuggestions')
+    return saved ? JSON.parse(saved) : []
+  })
+
+  // Filtrar sugestões ignoradas e já adicionadas
   const auditPlusSuggestions = generateAuditPlusSuggestions().filter(suggestion => 
-    !ignoredSuggestions.includes(suggestion.originalAuditId)
+    !ignoredSuggestions.includes(suggestion.originalAuditId) &&
+    !addedSuggestions.includes(suggestion.originalAuditId)
   )
 
   // Função para ignorar sugestão
@@ -470,18 +477,20 @@ export default function Schedule() {
             Debug Auditoria Plus
           </button>
 
-          {ignoredSuggestions.length > 0 && (
+          {(ignoredSuggestions.length > 0 || addedSuggestions.length > 0) && (
             <button
               onClick={() => {
-                if (confirm('Deseja restaurar todas as sugestões ignoradas?')) {
+                if (confirm('Deseja restaurar todas as sugestões ignoradas e adicionadas?')) {
                   setIgnoredSuggestions([])
+                  setAddedSuggestions([])
                   localStorage.removeItem('ignoredAuditPlusSuggestions')
+                  localStorage.removeItem('addedAuditPlusSuggestions')
                 }
               }}
               className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
             >
               <CheckCircle size={20} />
-              Restaurar Sugestões ({ignoredSuggestions.length})
+              Restaurar Sugestões ({ignoredSuggestions.length + addedSuggestions.length})
             </button>
           )}
         </div>
@@ -628,6 +637,12 @@ export default function Schedule() {
                               }
                               setSchedules(prev => [...prev, newSchedule])
                               localStorage.setItem('auditSchedules', JSON.stringify([...schedules, newSchedule]))
+                              
+                              // Marcar sugestão como adicionada
+                              const updatedAdded = [...addedSuggestions, suggestion.originalAuditId]
+                              setAddedSuggestions(updatedAdded)
+                              localStorage.setItem('addedAuditPlusSuggestions', JSON.stringify(updatedAdded))
+                              
                               alert('Classe adicionada ao cronograma do mês atual!')
                             }}
                             className="text-green-600 hover:text-green-900"
