@@ -149,12 +149,19 @@ export default function Schedule() {
     })
   }
 
-  // Atualizar quando mudar mês/ano ou quando houver novas auditorias
+  // Atualizar automaticamente quando houver novas auditorias
   useEffect(() => {
     if (schedules.length > 0) {
       syncProgressWithAudits()
     }
-  }, [selectedMonth, selectedYear, audits.length])
+  }, [audits])
+
+  // Atualizar quando mudar mês/ano
+  useEffect(() => {
+    if (schedules.length > 0) {
+      syncProgressWithAudits()
+    }
+  }, [selectedMonth, selectedYear])
 
   const addSchedule = () => {
     setEditingSchedule({
@@ -288,27 +295,9 @@ export default function Schedule() {
             Adicionar Classe
           </button>
           
-          <button
-            onClick={syncProgressWithAudits}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <RefreshCw size={20} />
-            Atualizar Status
-          </button>
-
-          <button
-            onClick={() => {
-              console.log('=== DEBUG CRONOGRAMA ===')
-              console.log('Cronogramas:', schedules)
-              console.log('Auditorias:', audits)
-              console.log('Auditorias tipo classe:', audits.filter(a => a.entryType === 'classe'))
-              syncProgressWithAudits()
-            }}
-            className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            <RefreshCw size={20} />
-            Debug
-          </button>
+          <div className="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg">
+            <span className="font-medium">Sincronização Automática:</span> O status das classes é atualizado automaticamente quando você salva uma auditoria.
+          </div>
         </div>
 
         {/* Cards de Resumo */}
