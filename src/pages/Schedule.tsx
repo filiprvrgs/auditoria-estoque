@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Calendar, CheckCircle, RefreshCw } from 'lucide-react'
 
-// TESTE: Forçar deploy com dropdowns funcionais
 export default function Schedule() {
   const [schedules, setSchedules] = useState<any[]>([])
 
@@ -28,7 +27,6 @@ export default function Schedule() {
   const [editingSchedule, setEditingSchedule] = useState<any | null>(null)
   const [showAuditsModal, setShowAuditsModal] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null)
-  const [showCompleted, setShowCompleted] = useState(true)
 
   const currentMonth = new Date().getMonth()
   const currentYear = new Date().getFullYear()
@@ -60,7 +58,7 @@ export default function Schedule() {
     const updatedSchedules = schedules.map(schedule => {
       // Filtrar auditorias da classe para o mês atual
       const classAudits = audits.filter(audit => {
-        const auditDate = new Date(audit.auditDate)
+        const auditDate = new Date(audit.date)
         const isCurrentMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
         
         const matchesClass = audit.items.some((item: any) => {
@@ -101,18 +99,18 @@ export default function Schedule() {
   }, [audits, schedules.length])
 
   const addSchedule = () => {
-    const newSchedule = {
+    setEditingSchedule({
+      id: '',
       className: '',
       classCode: '',
       description: '',
-      category: categories[0],
-      warehouse: warehouses[0],
+      category: '',
+      warehouse: '',
       frequencyPerYear: 12,
       monthlyTarget: 1,
       completedThisMonth: 0,
       status: 'pending'
-    }
-    setEditingSchedule(newSchedule)
+    })
     setShowModal(true)
   }
 
@@ -124,81 +122,55 @@ export default function Schedule() {
   const deleteSchedule = (id: string) => {
     const updatedSchedules = schedules.filter(s => s.id !== id)
     setSchedules(updatedSchedules)
-    try {
-      localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
-      console.log('Cronograma deletado com sucesso!')
-    } catch (error) {
-      console.error('Erro ao deletar cronograma:', error)
-      alert('Erro ao deletar o cronograma. Por favor, tente novamente.')
-    }
+    localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
   }
 
   const saveSchedule = () => {
-    if (!editingSchedule) return
-
-    // Validar campos obrigatórios
-    if (!editingSchedule.className?.trim()) {
-      alert('Por favor, preencha o nome da classe')
-      return
-    }
-    if (!editingSchedule.classCode?.trim()) {
-      alert('Por favor, preencha o código da classe')
-      return
-    }
-    if (!editingSchedule.category?.trim()) {
-      alert('Por favor, selecione uma categoria')
-      return
-    }
-    if (!editingSchedule.warehouse?.trim()) {
-      alert('Por favor, selecione um galpão')
-      return
-    }
-    if (!editingSchedule.frequencyPerYear || editingSchedule.frequencyPerYear < 1) {
-      alert('Por favor, defina uma frequência anual válida (mínimo 1)')
-      return
-    }
-    if (!editingSchedule.monthlyTarget || editingSchedule.monthlyTarget < 0) {
-      alert('Por favor, defina uma meta mensal válida')
+    if (!editingSchedule.className || !editingSchedule.classCode) {
+      alert('Por favor, preencha o nome e código da classe.')
       return
     }
 
     let updatedSchedules
     if (editingSchedule.id) {
-      updatedSchedules = schedules.map(s => s.id === editingSchedule.id ? editingSchedule : s)
+      // Editar
+      updatedSchedules = schedules.map(s => 
+        s.id === editingSchedule.id ? editingSchedule : s
+      )
     } else {
+      // Adicionar novo
       const newSchedule = {
         ...editingSchedule,
-        id: Date.now().toString(),
-        status: 'pending',
-        completedThisMonth: 0
+        id: Date.now().toString()
       }
       updatedSchedules = [...schedules, newSchedule]
     }
 
-    // Salvar no estado e localStorage
-    try {
-      localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
-      setSchedules(updatedSchedules)
-      alert('Cronograma salvo com sucesso!')
-      setShowModal(false)
-      setEditingSchedule(null)
-    } catch (error) {
-      console.error('Erro ao salvar cronograma:', error)
-      alert('Erro ao salvar o cronograma. Por favor, tente novamente.')
-    }
+    setSchedules(updatedSchedules)
+    localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
+    setShowModal(false)
+    setEditingSchedule(null)
   }
 
   const updateStatus = (id: string, status: 'pending' | 'in-progress' | 'completed' | 'overdue') => {
-    setSchedules(schedules.map(s => s.id === id ? { ...s, status } : s))
+    const updatedSchedules = schedules.map(s => 
+      s.id === id ? { ...s, status } : s
+    )
+    setSchedules(updatedSchedules)
+    localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
   }
 
   const updateProgress = (id: string, completedThisMonth: number) => {
-    setSchedules(schedules.map(s => s.id === id ? { ...s, completedThisMonth } : s))
+    const updatedSchedules = schedules.map(s => 
+      s.id === id ? { ...s, completedThisMonth } : s
+    )
+    setSchedules(updatedSchedules)
+    localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
   }
 
   const getRelatedAudits = (schedule: any) => {
     return audits.filter(audit => {
-      const auditDate = new Date(audit.auditDate)
+      const auditDate = new Date(audit.date)
       const isCurrentMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
       
       const matchesClass = audit.items.some((item: any) => {
@@ -256,18 +228,6 @@ export default function Schedule() {
           >
             <RefreshCw size={20} />
             Sincronizar
-          </button>
-
-          <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              showCompleted 
-                ? 'bg-gray-600 text-white hover:bg-gray-700' 
-                : 'bg-green-600 text-white hover:bg-green-700'
-            }`}
-          >
-            <CheckCircle size={20} />
-            {showCompleted ? 'Ocultar Concluídas' : 'Mostrar Concluídas'}
           </button>
         </div>
 
@@ -344,9 +304,7 @@ export default function Schedule() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {schedules
-                  .filter(schedule => showCompleted || schedule.status !== 'completed')
-                  .map((schedule) => (
+                {schedules.map((schedule) => (
                   <tr key={schedule.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
@@ -514,11 +472,25 @@ export default function Schedule() {
                       max="52"
                     />
                   </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Meta Mensal</label>
+                    <input
+                      type="number"
+                      value={editingSchedule.monthlyTarget}
+                      onChange={(e) => setEditingSchedule({...editingSchedule, monthlyTarget: parseInt(e.target.value) || 0})}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      min="0"
+                    />
+                  </div>
                 </div>
                 
                 <div className="flex justify-end space-x-3 mt-6">
                   <button
-                    onClick={() => setShowModal(false)}
+                    onClick={() => {
+                      setShowModal(false)
+                      setEditingSchedule(null)
+                    }}
                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                   >
                     Cancelar
@@ -535,10 +507,10 @@ export default function Schedule() {
           </div>
         )}
 
-        {/* Modal de Auditorias Relacionadas */}
+        {/* Modal para Visualizar Auditorias Relacionadas */}
         {showAuditsModal && selectedSchedule && (
           <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-3/4 shadow-lg rounded-md bg-white">
+            <div className="relative top-20 mx-auto p-5 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Auditorias Relacionadas - {selectedSchedule.className}
@@ -555,11 +527,9 @@ export default function Schedule() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {getRelatedAudits(selectedSchedule).map((audit) => (
-                        <tr key={audit.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {new Date(audit.auditDate).toLocaleDateString()}
-                          </td>
+                      {getRelatedAudits(selectedSchedule).map((audit, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{audit.date}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{audit.auditor}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{audit.location}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{audit.items.length}</td>
