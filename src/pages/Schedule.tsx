@@ -21,29 +21,28 @@ export default function Schedule() {
   const currentMonth = new Date().getMonth()
   const currentYear = new Date().getFullYear()
 
-  // Categorias predefinidas
+  // Categorias do sistema
   const categories = [
-    'Eletrônicos',
-    'Móveis',
-    'Roupas',
-    'Alimentos',
-    'Livros',
-    'Ferramentas',
-    'Automotivo',
-    'Casa e Jardim',
-    'Esportes',
-    'Outros'
+    'Motor',
+    'Relé',
+    'Suspensão',
+    'Parafuso de roda',
+    'Estamparia',
+    'Conformação',
+    'Traub',
+    'Injetora',
+    'ALMOX. GERAL'
   ]
 
-  // Armazéns predefinidos
+  // Galpões do sistema
   const warehouses = [
-    'Armazém Central',
-    'Armazém Norte',
-    'Armazém Sul',
-    'Armazém Leste',
-    'Armazém Oeste',
-    'Depósito Principal',
-    'Depósito Secundário'
+    'Galpão 02',
+    'Galpão 02-03',
+    'Galpão 03',
+    'Galpão 03-04',
+    'Galpão 04',
+    'Galpão 05',
+    'Todos no Galpão 03'
   ]
 
   // Sincronizar progresso com auditorias realizadas
@@ -265,6 +264,8 @@ export default function Schedule() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Classe</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Galpão</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Freq. Anual</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Meta Mensal</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concluídas</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -282,6 +283,20 @@ export default function Schedule() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.classCode}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.category}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.warehouse}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="number"
+                        value={schedule.frequencyPerYear}
+                        onChange={(e) => {
+                          const newSchedule = { ...schedule, frequencyPerYear: parseInt(e.target.value) || 0 }
+                          setSchedules(schedules.map(s => s.id === schedule.id ? newSchedule : s))
+                        }}
+                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                        min="1"
+                        max="52"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
                         type="number"
