@@ -302,7 +302,7 @@ export default function Schedule() {
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
       
       const isRecent = auditDate >= threeMonthsAgo
-      const isClassAudit = audit.entryType === 'classe'
+      const isClassAudit = audit.entryType === 'classe' || audit.entryType === undefined
       
       // Debug: logar estrutura da auditoria
       console.log('Analisando auditoria:', {
@@ -310,21 +310,30 @@ export default function Schedule() {
         date: audit.date,
         entryType: audit.entryType,
         items: audit.items,
-        precision: audit.precision
+        precision: audit.precision,
+        itemsDetails: audit.items?.map((item: any) => ({
+          productCode: item.productCode,
+          productName: item.productName,
+          status: item.status,
+          quantity: item.quantity
+        }))
       })
       
       // Calcular precisão da auditoria
       let precision = 100
       
-      // Primeiro tentar usar a precisão já calculada
-      if (audit.precision !== undefined) {
+      // Usar a precisão já calculada e salva na auditoria
+      if (audit.precision !== undefined && audit.precision !== null) {
         precision = audit.precision
-      } else if (audit.items && audit.items.length > 0) {
-        const totalItems = audit.items.length
-        const correctItems = audit.items.filter((item: any) => 
-          item.status === 'correct' || item.status === 'ok'
-        ).length
-        precision = Math.round((correctItems / totalItems) * 100)
+      } else {
+        // Fallback: tentar calcular baseado nos itens
+        if (audit.items && audit.items.length > 0) {
+          const totalItems = audit.items.length
+          const correctItems = audit.items.filter((item: any) => 
+            item.status === 'correct' || item.status === 'ok'
+          ).length
+          precision = Math.round((correctItems / totalItems) * 100)
+        }
       }
       
       // Debug: logar precisão calculada
