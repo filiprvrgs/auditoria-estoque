@@ -918,7 +918,7 @@ export default function Schedule() {
       {/* Modal de Ignorar Sugestão */}
       {showIgnoreModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-red-100 rounded-lg">
@@ -941,13 +941,13 @@ export default function Schedule() {
                     setShowIgnoreModal(false)
                     setSuggestionToIgnore(null)
                   }}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={() => suggestionToIgnore && ignoreSuggestion(suggestionToIgnore)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
                 >
                   Ignorar Sugestão
                 </button>
@@ -960,7 +960,7 @@ export default function Schedule() {
       {/* Modal de Restaurar Sugestões */}
       {showRestoreModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded-lg">
@@ -990,7 +990,7 @@ export default function Schedule() {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowRestoreModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
                 >
                   Cancelar
                 </button>
@@ -1002,7 +1002,7 @@ export default function Schedule() {
                     localStorage.removeItem('addedAuditPlusSuggestions')
                     setShowRestoreModal(false)
                   }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
                 >
                   Restaurar Todas
                 </button>
