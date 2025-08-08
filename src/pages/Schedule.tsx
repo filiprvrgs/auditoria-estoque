@@ -107,10 +107,29 @@ export default function Schedule() {
             const containsMatch = item.productCode && item.productCode.includes(schedule.classCode)
             const nameMatch = item.productName && item.productName.includes(schedule.classCode)
             
+            // Debug: logar tentativas de correspondência
+            if (audit.entryType === 'classe') {
+              console.log(`Verificando classe ${schedule.classCode}:`, {
+                itemProductCode: item.productCode,
+                itemProductName: item.productName,
+                exactMatch,
+                containsMatch,
+                nameMatch,
+                finalMatch: exactMatch || containsMatch || nameMatch
+              })
+            }
+            
             return exactMatch || containsMatch || nameMatch
           })
         
         return matchesClass
+      })
+
+      // Debug: logar resultado para esta classe
+      console.log(`Classe ${schedule.className} (${schedule.classCode}):`, {
+        totalAudits: audits.length,
+        classAudits: allClassAudits.length,
+        isCompleted: allClassAudits.length > 0
       })
 
       // Filtrar auditorias do mês selecionado para exibição de detalhes
@@ -298,6 +317,19 @@ export default function Schedule() {
           <div className="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg">
             <span className="font-medium">Sincronização Automática:</span> O status das classes é atualizado automaticamente quando você salva uma auditoria.
           </div>
+
+          <button
+            onClick={() => {
+              console.log('=== FORÇANDO SINCRONIZAÇÃO ===')
+              console.log('Auditorias disponíveis:', audits)
+              console.log('Cronogramas:', schedules)
+              syncProgressWithAudits()
+            }}
+            className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+          >
+            <CheckCircle size={20} />
+            Forçar Sincronização
+          </button>
         </div>
 
         {/* Cards de Resumo */}
