@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Calendar, CheckCircle, RefreshCw } from 'lucide-react'
+import { Plus, Edit, Trash2, Calendar, CheckCircle, RefreshCw, Target } from 'lucide-react'
 
 export default function Schedule() {
   const [schedules, setSchedules] = useState<any[]>([])
@@ -61,12 +61,9 @@ export default function Schedule() {
         const auditDate = new Date(audit.date)
         const isCurrentMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
         
-        const matchesClass = audit.items.some((item: any) => {
-          const productCodeMatch = item.productCode && item.productCode.includes(schedule.classCode)
-          const productNameMatch = item.productName && item.productName.includes(schedule.classCode)
-          const classNameMatch = item.productName && schedule.className && item.productName.includes(schedule.className)
-          return productCodeMatch || productNameMatch || classNameMatch
-        })
+        // Verificar se a auditoria é do tipo 'classe' e corresponde ao código da classe
+        const matchesClass = audit.entryType === 'classe' && 
+          audit.items.some((item: any) => item.productCode === schedule.classCode)
         
         return isCurrentMonth && matchesClass
       })
@@ -106,7 +103,6 @@ export default function Schedule() {
       description: '',
       category: '',
       warehouse: '',
-      frequencyPerYear: 12,
       monthlyTarget: 1,
       completedThisMonth: 0,
       status: 'pending'
@@ -173,12 +169,9 @@ export default function Schedule() {
       const auditDate = new Date(audit.date)
       const isCurrentMonth = auditDate.getMonth() === currentMonth && auditDate.getFullYear() === currentYear
       
-      const matchesClass = audit.items.some((item: any) => {
-        const productCodeMatch = item.productCode && item.productCode.includes(schedule.classCode)
-        const productNameMatch = item.productName && item.productName.includes(schedule.classCode)
-        const classNameMatch = item.productName && schedule.className && item.productName.includes(schedule.className)
-        return productCodeMatch || productNameMatch || classNameMatch
-      })
+      // Verificar se a auditoria é do tipo 'classe' e corresponde ao código da classe
+      const matchesClass = audit.entryType === 'classe' && 
+        audit.items.some((item: any) => item.productCode === schedule.classCode)
       
       return isCurrentMonth && matchesClass
     })
@@ -208,8 +201,8 @@ export default function Schedule() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Cronograma de Auditorias</h1>
-          <p className="text-gray-600">Gerencie o cronograma de auditorias por classe</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Cronograma de Auditorias por Classe</h1>
+          <p className="text-gray-600">Gerencie as metas mensais de auditoria por classe</p>
         </div>
 
         {/* Botões de Ação */}
@@ -227,7 +220,7 @@ export default function Schedule() {
             className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
           >
             <RefreshCw size={20} />
-            Sincronizar
+            Sincronizar Progresso
           </button>
         </div>
 
@@ -285,7 +278,7 @@ export default function Schedule() {
         {/* Lista de Cronogramas */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Cronograma de Classes</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Metas Mensais por Classe</h2>
           </div>
           
           <div className="overflow-x-auto">
@@ -296,95 +289,97 @@ export default function Schedule() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Galpão</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Freq. Anual</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Meta Mensal</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Concluídas</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progresso</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {schedules.map((schedule) => (
-                  <tr key={schedule.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{schedule.className}</div>
-                        <div className="text-sm text-gray-500">{schedule.description}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.classCode}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.category}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.warehouse}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="number"
-                        value={schedule.frequencyPerYear}
-                        onChange={(e) => {
-                          const newSchedule = { ...schedule, frequencyPerYear: parseInt(e.target.value) || 0 }
-                          setSchedules(schedules.map(s => s.id === schedule.id ? newSchedule : s))
-                        }}
-                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                        min="1"
-                        max="52"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="number"
-                        value={schedule.monthlyTarget}
-                        onChange={(e) => {
-                          const newSchedule = { ...schedule, monthlyTarget: parseInt(e.target.value) || 0 }
-                          setSchedules(schedules.map(s => s.id === schedule.id ? newSchedule : s))
-                        }}
-                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                        min="0"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input
-                        type="number"
-                        value={schedule.completedThisMonth}
-                        onChange={(e) => updateProgress(schedule.id, parseInt(e.target.value) || 0)}
-                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                        min="0"
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={schedule.status}
-                        onChange={(e) => updateStatus(schedule.id, e.target.value as any)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(schedule.status)}`}
-                      >
-                        <option value="pending">Pendente</option>
-                        <option value="in-progress">Em Andamento</option>
-                        <option value="completed">Concluído</option>
-                        <option value="overdue">Atrasado</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => editSchedule(schedule)}
-                          className="text-blue-600 hover:text-blue-900"
+                {schedules.map((schedule) => {
+                  const progressPercentage = schedule.monthlyTarget > 0 
+                    ? Math.min((schedule.completedThisMonth / schedule.monthlyTarget) * 100, 100)
+                    : 0
+                  
+                  return (
+                    <tr key={schedule.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{schedule.className}</div>
+                          <div className="text-sm text-gray-500">{schedule.description}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.classCode}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.category}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.warehouse}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input
+                          type="number"
+                          value={schedule.monthlyTarget}
+                          onChange={(e) => {
+                            const newSchedule = { ...schedule, monthlyTarget: parseInt(e.target.value) || 0 }
+                            setSchedules(schedules.map(s => s.id === schedule.id ? newSchedule : s))
+                          }}
+                          className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                          min="0"
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {schedule.completedThisMonth} / {schedule.monthlyTarget}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              progressPercentage >= 100 ? 'bg-green-600' : 
+                              progressPercentage >= 50 ? 'bg-blue-600' : 'bg-yellow-500'
+                            }`}
+                            style={{ width: `${progressPercentage}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">{Math.round(progressPercentage)}%</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <select
+                          value={schedule.status}
+                          onChange={(e) => updateStatus(schedule.id, e.target.value as any)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(schedule.status)}`}
                         >
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => deleteSchedule(schedule.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => viewRelatedAudits(schedule)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          <CheckCircle size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <option value="pending">Pendente</option>
+                          <option value="in-progress">Em Andamento</option>
+                          <option value="completed">Concluído</option>
+                          <option value="overdue">Atrasado</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => editSchedule(schedule)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Editar classe"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => deleteSchedule(schedule.id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Excluir classe"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <button
+                            onClick={() => viewRelatedAudits(schedule)}
+                            className="text-green-600 hover:text-green-900"
+                            title="Ver auditorias relacionadas"
+                          >
+                            <CheckCircle size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -462,18 +457,6 @@ export default function Schedule() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Frequência por Ano</label>
-                    <input
-                      type="number"
-                      value={editingSchedule.frequencyPerYear}
-                      onChange={(e) => setEditingSchedule({...editingSchedule, frequencyPerYear: parseInt(e.target.value) || 0})}
-                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      min="1"
-                      max="52"
-                    />
-                  </div>
-                  
-                  <div>
                     <label className="block text-sm font-medium text-gray-700">Meta Mensal</label>
                     <input
                       type="number"
@@ -481,6 +464,7 @@ export default function Schedule() {
                       onChange={(e) => setEditingSchedule({...editingSchedule, monthlyTarget: parseInt(e.target.value) || 0})}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       min="0"
+                      placeholder="Quantas auditorias por mês"
                     />
                   </div>
                 </div>
@@ -513,7 +497,7 @@ export default function Schedule() {
             <div className="relative top-20 mx-auto p-5 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Auditorias Relacionadas - {selectedSchedule.className}
+                  Auditorias da Classe - {selectedSchedule.className}
                 </h3>
                 
                 <div className="overflow-x-auto">
@@ -523,7 +507,7 @@ export default function Schedule() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Auditor</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Local</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Itens</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Itens Auditados</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
