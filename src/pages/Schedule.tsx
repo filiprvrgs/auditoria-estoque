@@ -20,10 +20,44 @@ export default function Schedule() {
     }
   }, [])
 
-  const [audits] = useState<any[]>(() => {
+  // Carregar auditorias e atualizar quando houver mudanças
+  const [audits, setAudits] = useState<any[]>(() => {
     const saved = localStorage.getItem('audits')
     return saved ? JSON.parse(saved) : []
   })
+
+  // Atualizar auditorias quando o localStorage mudar
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('audits')
+      if (saved) {
+        setAudits(JSON.parse(saved))
+      }
+    }
+
+    // Adicionar listener para mudanças no localStorage
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Verificar mudanças a cada 5 segundos
+    const interval = setInterval(() => {
+      const saved = localStorage.getItem('audits')
+      if (saved) {
+        const parsedAudits = JSON.parse(saved)
+        setAudits(prev => {
+          // Só atualiza se houver mudança
+          if (JSON.stringify(prev) !== JSON.stringify(parsedAudits)) {
+            return parsedAudits
+          }
+          return prev
+        })
+      }
+    }, 5000)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
 
   const [showModal, setShowModal] = useState(false)
   const [editingSchedule, setEditingSchedule] = useState<any | null>(null)
@@ -94,9 +128,10 @@ export default function Schedule() {
     localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
   }
 
+  // Atualizar quando mudar mês/ano ou quando houver novas auditorias
   useEffect(() => {
     syncProgressWithAudits()
-  }, [selectedMonth, selectedYear, audits, schedules.length])
+  }, [selectedMonth, selectedYear, audits])
 
   const addSchedule = () => {
     setEditingSchedule({
