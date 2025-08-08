@@ -101,12 +101,11 @@ export default function Schedule() {
 
   const addSchedule = () => {
     const newSchedule = {
-      id: Date.now().toString(),
       className: '',
       classCode: '',
       description: '',
-      category: '',
-      warehouse: '',
+      category: categories[0],
+      warehouse: warehouses[0],
       frequencyPerYear: 12,
       monthlyTarget: 1,
       completedThisMonth: 0,
@@ -136,26 +135,56 @@ export default function Schedule() {
   const saveSchedule = () => {
     if (!editingSchedule) return
 
+    // Validar campos obrigatórios
+    if (!editingSchedule.className?.trim()) {
+      alert('Por favor, preencha o nome da classe')
+      return
+    }
+    if (!editingSchedule.classCode?.trim()) {
+      alert('Por favor, preencha o código da classe')
+      return
+    }
+    if (!editingSchedule.category?.trim()) {
+      alert('Por favor, selecione uma categoria')
+      return
+    }
+    if (!editingSchedule.warehouse?.trim()) {
+      alert('Por favor, selecione um galpão')
+      return
+    }
+    if (!editingSchedule.frequencyPerYear || editingSchedule.frequencyPerYear < 1) {
+      alert('Por favor, defina uma frequência anual válida (mínimo 1)')
+      return
+    }
+    if (!editingSchedule.monthlyTarget || editingSchedule.monthlyTarget < 0) {
+      alert('Por favor, defina uma meta mensal válida')
+      return
+    }
+
     let updatedSchedules
     if (editingSchedule.id) {
       updatedSchedules = schedules.map(s => s.id === editingSchedule.id ? editingSchedule : s)
     } else {
-      updatedSchedules = [...schedules, { ...editingSchedule, id: Date.now().toString() }]
+      const newSchedule = {
+        ...editingSchedule,
+        id: Date.now().toString(),
+        status: 'pending',
+        completedThisMonth: 0
+      }
+      updatedSchedules = [...schedules, newSchedule]
     }
 
     // Salvar no estado e localStorage
-    setSchedules(updatedSchedules)
     try {
       localStorage.setItem('auditSchedules', JSON.stringify(updatedSchedules))
-      console.log('Cronograma salvo com sucesso!')
+      setSchedules(updatedSchedules)
+      alert('Cronograma salvo com sucesso!')
+      setShowModal(false)
+      setEditingSchedule(null)
     } catch (error) {
       console.error('Erro ao salvar cronograma:', error)
       alert('Erro ao salvar o cronograma. Por favor, tente novamente.')
-      return
     }
-
-    setShowModal(false)
-    setEditingSchedule(null)
   }
 
   const updateStatus = (id: string, status: 'pending' | 'in-progress' | 'completed' | 'overdue') => {
