@@ -110,7 +110,7 @@ export default function DataEntry() {
     // Se for uma auditoria de classe, atualizar o cronograma
     if (auditData.entryType === 'classe') {
       const schedules = JSON.parse(localStorage.getItem('auditSchedules') || '[]')
-      const updatedSchedules = schedules.map(schedule => {
+      const updatedSchedules = schedules.map((schedule: any) => {
         // Verificar se algum item da auditoria corresponde ao código da classe
         const matchingItems = auditData.items.filter(item => 
           item.productCode === schedule.classCode
