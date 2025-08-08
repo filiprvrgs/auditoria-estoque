@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Calendar, CheckCircle, Clock } from 'lucide-react'
+import { Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Target } from 'lucide-react'
 
 export default function Schedule() {
   const [schedules, setSchedules] = useState<any[]>([])
@@ -293,6 +293,77 @@ export default function Schedule() {
     ? Math.round((completedSchedules / totalSchedules) * 100) 
     : 0
 
+  // Sistema Auditoria Plus - Identificar auditorias com baixa precisão
+  const getLowPrecisionAudits = () => {
+    return audits.filter(audit => {
+      // Filtrar apenas auditorias de classe dos últimos 3 meses
+      const auditDate = new Date(audit.date)
+      const threeMonthsAgo = new Date()
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+      
+      const isRecent = auditDate >= threeMonthsAgo
+      const isClassAudit = audit.entryType === 'classe'
+      
+      // Calcular precisão da auditoria
+      let precision = 100
+      if (audit.items && audit.items.length > 0) {
+        const totalItems = audit.items.length
+        const correctItems = audit.items.filter((item: any) => 
+          item.status === 'correct' || item.status === 'ok'
+        ).length
+        precision = Math.round((correctItems / totalItems) * 100)
+      }
+      
+      // Considerar baixa precisão se < 80%
+      const isLowPrecision = precision < 80
+      
+      return isRecent && isClassAudit && isLowPrecision
+    })
+  }
+
+  // Gerar sugestões de auditoria plus
+  const generateAuditPlusSuggestions = () => {
+    const lowPrecisionAudits = getLowPrecisionAudits()
+    
+    return lowPrecisionAudits.map(audit => {
+      // Encontrar a classe correspondente
+      const relatedClass = schedules.find(schedule => 
+        audit.items.some((item: any) => {
+          const exactMatch = item.productCode === schedule.classCode
+          const containsMatch = item.productCode && item.productCode.includes(schedule.classCode)
+          const nameMatch = item.productName && item.productName.includes(schedule.classCode)
+          return exactMatch || containsMatch || nameMatch
+        })
+      )
+
+      // Calcular precisão
+      let precision = 100
+      if (audit.items && audit.items.length > 0) {
+        const totalItems = audit.items.length
+        const correctItems = audit.items.filter((item: any) => 
+          item.status === 'correct' || item.status === 'ok'
+        ).length
+        precision = Math.round((correctItems / totalItems) * 100)
+      }
+
+      return {
+        id: `plus_${audit.id}`,
+        originalAuditId: audit.id,
+        className: relatedClass?.className || 'Classe não identificada',
+        classCode: relatedClass?.classCode || 'Código não identificado',
+        category: relatedClass?.category || 'Categoria não identificada',
+        warehouse: relatedClass?.warehouse || 'Galpão não identificado',
+        originalDate: audit.date,
+        originalPrecision: precision,
+        suggestedDate: new Date().toISOString().split('T')[0], // Data atual
+        priority: precision < 60 ? 'Alta' : precision < 80 ? 'Média' : 'Baixa',
+        reason: `Precisão original: ${precision}% - Necessita reauditoria`
+      }
+    })
+  }
+
+  const auditPlusSuggestions = generateAuditPlusSuggestions()
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -401,6 +472,123 @@ export default function Schedule() {
             </div>
           </div>
         </div>
+
+        {/* Auditoria Plus - Sugestões de Reauditoria */}
+        {auditPlusSuggestions.length > 0 && (
+          <div className="bg-white rounded-lg shadow mb-8">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <Target className="h-6 w-6 text-orange-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Auditoria Plus - Sugestões de Reauditoria
+                  </h2>
+                </div>
+                <span className="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded-full">
+                  {auditPlusSuggestions.length} sugestão{auditPlusSuggestions.length > 1 ? 'ões' : ''}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                Classes que precisam de reauditoria devido à baixa precisão anterior
+              </p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-orange-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-orange-700 uppercase tracking-wider">Classe</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-orange-700 uppercase tracking-wider">Código</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-orange-700 uppercase tracking-wider">Precisão Original</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-orange-700 uppercase tracking-wider">Data Original</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-orange-700 uppercase tracking-wider">Prioridade</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-orange-700 uppercase tracking-wider">Motivo</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-orange-700 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {auditPlusSuggestions.map((suggestion) => (
+                    <tr key={suggestion.id} className="bg-orange-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{suggestion.className}</div>
+                          <div className="text-sm text-gray-500">{suggestion.category} - {suggestion.warehouse}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{suggestion.classCode}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          suggestion.originalPrecision < 60 ? 'bg-red-100 text-red-800' :
+                          suggestion.originalPrecision < 80 ? 'bg-orange-100 text-orange-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {suggestion.originalPrecision}%
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {new Date(suggestion.originalDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          suggestion.priority === 'Alta' ? 'bg-red-100 text-red-800' :
+                          suggestion.priority === 'Média' ? 'bg-orange-100 text-orange-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {suggestion.priority}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {suggestion.reason}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              // Adicionar ao cronograma do mês atual
+                              const newSchedule = {
+                                id: `plus_${Date.now()}`,
+                                className: suggestion.className,
+                                classCode: suggestion.classCode,
+                                description: `Reauditoria Plus - ${suggestion.reason}`,
+                                category: suggestion.category,
+                                warehouse: suggestion.warehouse,
+                                status: 'pending',
+                                isCompleted: false,
+                                lastAuditDate: null,
+                                month: selectedMonth,
+                                year: selectedYear,
+                                isAuditPlus: true,
+                                originalAuditId: suggestion.originalAuditId
+                              }
+                              setSchedules(prev => [...prev, newSchedule])
+                              localStorage.setItem('auditSchedules', JSON.stringify([...schedules, newSchedule]))
+                              alert('Classe adicionada ao cronograma do mês atual!')
+                            }}
+                            className="text-green-600 hover:text-green-900"
+                            title="Adicionar ao cronograma"
+                          >
+                            <Plus size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              console.log('Detalhes da auditoria original:', suggestion)
+                            }}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Ver detalhes"
+                          >
+                            <Edit size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Lista de Classes */}
         <div className="bg-white rounded-lg shadow">
