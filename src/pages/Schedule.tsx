@@ -1,23 +1,35 @@
 import { useState, useEffect } from 'react'
+import { DEFAULT_CLASS_DICTIONARY } from '../data/classes'
 import { Plus, Edit, Trash2, Calendar, CheckCircle, Clock, Target } from 'lucide-react'
 
 export default function Schedule() {
   const [schedules, setSchedules] = useState<any[]>([])
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
-  // Dicionário opcional carregado do localStorage para auto-preenchimento por código
+  // Dicionário carregado (padrão + localStorage + opcional public/classes.json)
   const [classDictionary, setClassDictionary] = useState<Record<string, { name: string, category?: string, warehouse?: string }>>(() => {
     try {
       const saved = localStorage.getItem('classDictionary')
-      return saved ? JSON.parse(saved) : {}
+      const fromStorage = saved ? JSON.parse(saved) : {}
+      return { ...DEFAULT_CLASS_DICTIONARY, ...fromStorage }
     } catch {
-      return {}
+      return { ...DEFAULT_CLASS_DICTIONARY }
     }
   })
 
-  // Estado do modal de importação
-  const [showImportModal, setShowImportModal] = useState(false)
-  const [importText, setImportText] = useState('')
+  // Tenta carregar public/classes.json uma vez e mescla
+  useEffect(() => {
+    let cancelled = false
+    fetch('/classes.json')
+      .then(r => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (!cancelled && json && typeof json === 'object') {
+          setClassDictionary(prev => ({ ...prev, ...json }))
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   // Carregar dados do localStorage
   useEffect(() => {
@@ -483,13 +495,7 @@ export default function Schedule() {
             Adicionar Classe
           </button>
 
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-2 bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            <Edit size={20} />
-            Importar Códigos
-          </button>
+          {/* Botão de importação removido conforme solicitado */}
           
           <div className="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-lg">
             <span className="font-medium">Sincronização Automática:</span> O status das classes é atualizado automaticamente quando você salva uma auditoria.
@@ -924,49 +930,7 @@ export default function Schedule() {
           </div>
         )}
 
-        {/* Modal de Importação de Dicionário */}
-        {showImportModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-4 sm:p-6 max-w-xl w-full mx-4">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Importar Dicionário de Classes</h3>
-                <p className="text-sm text-gray-600 mt-1">Cole um JSON no formato {`{ "9098": { "name": "Tampas", "category": "Relé", "warehouse": "Galpão 02" } }`}.</p>
-              </div>
-              <textarea
-                value={importText}
-                onChange={(e) => setImportText(e.target.value)}
-                placeholder='{"9098":{"name":"Tampas","category":"Relé","warehouse":"Galpão 02"}}'
-                className="w-full h-40 p-3 border border-gray-300 rounded-md font-mono text-sm"
-              />
-              <div className="flex justify-end gap-3 mt-4">
-                <button
-                  onClick={() => setShowImportModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => {
-                    try {
-                      const parsed = JSON.parse(importText || '{}')
-                      const merged = { ...classDictionary, ...parsed }
-                      setClassDictionary(merged)
-                      localStorage.setItem('classDictionary', JSON.stringify(merged))
-                      setShowImportModal(false)
-                      setImportText('')
-                      alert('Dicionário importado com sucesso!')
-                    } catch (err) {
-                      alert('JSON inválido. Verifique o formato.')
-                    }
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-                >
-                  Salvar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modal de Importação removido */}
 
         {/* Modal para Visualizar Auditorias Relacionadas */}
         {showAuditsModal && selectedSchedule && (
