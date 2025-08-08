@@ -95,22 +95,26 @@ export default function Schedule() {
   // Sincronizar progresso com auditorias realizadas
   const syncProgressWithAudits = () => {
     const updatedSchedules = schedules.map(schedule => {
-      // Filtrar auditorias da classe para o mês selecionado
-      const classAudits = audits.filter(audit => {
-        const auditDate = new Date(audit.date)
-        const isSelectedMonth = auditDate.getMonth() === selectedMonth && 
-                              auditDate.getFullYear() === selectedYear
-        
+      // Buscar TODAS as auditorias da classe (não filtrar por mês)
+      const allClassAudits = audits.filter(audit => {
         // Verificar se a auditoria é do tipo 'classe' e corresponde ao código da classe
         const matchesClass = audit.entryType === 'classe' && 
           audit.items.some((item: any) => item.productCode === schedule.classCode)
         
-        return isSelectedMonth && matchesClass
+        return matchesClass
       })
 
-      const isCompleted = classAudits.length > 0
-      const lastAuditDate = classAudits.length > 0 
-        ? new Date(Math.max(...classAudits.map(a => new Date(a.date).getTime())))
+      // Filtrar auditorias do mês selecionado para exibição de detalhes
+      const monthClassAudits = allClassAudits.filter(audit => {
+        const auditDate = new Date(audit.date)
+        return auditDate.getMonth() === selectedMonth && 
+               auditDate.getFullYear() === selectedYear
+      })
+
+      // Status baseado em TODAS as auditorias (não só do mês)
+      const isCompleted = allClassAudits.length > 0
+      const lastAuditDate = allClassAudits.length > 0 
+        ? new Date(Math.max(...allClassAudits.map(a => new Date(a.date).getTime())))
         : null
 
       // Status automático baseado no envio para dashboard
@@ -120,7 +124,8 @@ export default function Schedule() {
         ...schedule,
         isCompleted,
         lastAuditDate,
-        status
+        status,
+        monthClassAudits // Adicionar auditorias do mês para exibição
       }
     })
 
@@ -187,6 +192,12 @@ export default function Schedule() {
   }
 
   const getRelatedAudits = (schedule: any) => {
+    // Usar as auditorias do mês que já foram calculadas
+    if (schedule.monthClassAudits) {
+      return schedule.monthClassAudits
+    }
+    
+    // Fallback para o método antigo se não tiver as auditorias calculadas
     return audits.filter(audit => {
       const auditDate = new Date(audit.date)
       const isSelectedMonth = auditDate.getMonth() === selectedMonth && 
