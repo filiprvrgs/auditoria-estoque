@@ -5,6 +5,15 @@ export default function Schedule() {
   const [schedules, setSchedules] = useState<any[]>([])
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
+  // Dicionário opcional carregado do localStorage para auto-preenchimento por código
+  const [classDictionary, setClassDictionary] = useState<Record<string, { name: string, category?: string, warehouse?: string }>>(() => {
+    try {
+      const saved = localStorage.getItem('classDictionary')
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
 
   // Carregar dados do localStorage
   useEffect(() => {
@@ -91,6 +100,23 @@ export default function Schedule() {
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ]
+
+  // Helper: encontrar informações da classe por código usando dicionário ou cronogramas existentes
+  const findClassInfoByCode = (code: string): { name?: string, category?: string, warehouse?: string } | null => {
+    if (!code) return null
+    const trimmed = String(code).trim()
+    // 1) Dicionário do localStorage (preferência)
+    const dictHit = classDictionary[trimmed]
+    if (dictHit) {
+      return { name: dictHit.name, category: dictHit.category, warehouse: dictHit.warehouse }
+    }
+    // 2) Cronogramas já cadastrados
+    const scheduleHit = schedules.find(s => String(s.classCode).trim() === trimmed)
+    if (scheduleHit) {
+      return { name: scheduleHit.className, category: scheduleHit.category, warehouse: scheduleHit.warehouse }
+    }
+    return null
+  }
 
   // Sincronizar progresso com auditorias realizadas
   const syncProgressWithAudits = () => {
@@ -802,7 +828,23 @@ export default function Schedule() {
                     <input
                       type="text"
                       value={editingSchedule.classCode}
-                      onChange={(e) => setEditingSchedule({...editingSchedule, classCode: e.target.value})}
+                      onChange={(e) => {
+                        const code = e.target.value
+                        let updated: any = { ...editingSchedule, classCode: code }
+                        const info = findClassInfoByCode(code)
+                        if (info) {
+                          if (!updated.className || updated.className.trim() === '') {
+                            updated.className = info.name || updated.className
+                          }
+                          if (!updated.category || updated.category.trim() === '') {
+                            updated.category = info.category || updated.category
+                          }
+                          if (!updated.warehouse || updated.warehouse.trim() === '') {
+                            updated.warehouse = info.warehouse || updated.warehouse
+                          }
+                        }
+                        setEditingSchedule(updated)
+                      }}
                       className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       placeholder="Ex: ELET001"
                     />
