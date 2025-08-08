@@ -28,6 +28,7 @@ export default function Schedule() {
   const [editingSchedule, setEditingSchedule] = useState<any | null>(null)
   const [showAuditsModal, setShowAuditsModal] = useState(false)
   const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null)
+  const [showCompleted, setShowCompleted] = useState(true)
 
   const currentMonth = new Date().getMonth()
   const currentYear = new Date().getFullYear()
@@ -256,6 +257,18 @@ export default function Schedule() {
             <RefreshCw size={20} />
             Sincronizar
           </button>
+
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              showCompleted 
+                ? 'bg-gray-600 text-white hover:bg-gray-700' 
+                : 'bg-green-600 text-white hover:bg-green-700'
+            }`}
+          >
+            <CheckCircle size={20} />
+            {showCompleted ? 'Ocultar Concluídas' : 'Mostrar Concluídas'}
+          </button>
         </div>
 
         {/* Cards de Resumo */}
@@ -331,7 +344,9 @@ export default function Schedule() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {schedules.map((schedule) => (
+                {schedules
+                  .filter(schedule => showCompleted || schedule.status !== 'completed')
+                  .map((schedule) => (
                   <tr key={schedule.id}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
