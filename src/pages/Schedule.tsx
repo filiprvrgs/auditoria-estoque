@@ -381,7 +381,23 @@ export default function Schedule() {
     })
   }
 
-  const auditPlusSuggestions = generateAuditPlusSuggestions()
+  // Estado para sugestões ignoradas
+  const [ignoredSuggestions, setIgnoredSuggestions] = useState<string[]>(() => {
+    const saved = localStorage.getItem('ignoredAuditPlusSuggestions')
+    return saved ? JSON.parse(saved) : []
+  })
+
+  // Filtrar sugestões ignoradas
+  const auditPlusSuggestions = generateAuditPlusSuggestions().filter(suggestion => 
+    !ignoredSuggestions.includes(suggestion.originalAuditId)
+  )
+
+  // Função para ignorar sugestão
+  const ignoreSuggestion = (auditId: string) => {
+    const updatedIgnored = [...ignoredSuggestions, auditId]
+    setIgnoredSuggestions(updatedIgnored)
+    localStorage.setItem('ignoredAuditPlusSuggestions', JSON.stringify(updatedIgnored))
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -453,6 +469,21 @@ export default function Schedule() {
             <Target size={20} />
             Debug Auditoria Plus
           </button>
+
+          {ignoredSuggestions.length > 0 && (
+            <button
+              onClick={() => {
+                if (confirm('Deseja restaurar todas as sugestões ignoradas?')) {
+                  setIgnoredSuggestions([])
+                  localStorage.removeItem('ignoredAuditPlusSuggestions')
+                }
+              }}
+              className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <CheckCircle size={20} />
+              Restaurar Sugestões ({ignoredSuggestions.length})
+            </button>
+          )}
         </div>
 
         {/* Cards de Resumo */}
@@ -612,6 +643,17 @@ export default function Schedule() {
                             title="Ver detalhes"
                           >
                             <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm('Tem certeza que deseja ignorar esta sugestão? Ela não aparecerá mais nas sugestões.')) {
+                                ignoreSuggestion(suggestion.originalAuditId)
+                              }
+                            }}
+                            className="text-red-600 hover:text-red-900"
+                            title="Ignorar sugestão"
+                          >
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
